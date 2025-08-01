@@ -75,17 +75,17 @@ for row in range(5):
 st.markdown("""
     <style>
         div[data-testid="stTextInput"] input {
-            width: 100px !important;
-            height: 100px !important;
-            font-size: 22px !important;
+            width: 50px !important;
+            height: 50px !important;
+            font-size: 25px !important;
             text-align: center !important;
             padding: 0 !important;
             margin: 0 auto !important;
             box-sizing: border-box !important;
         }
         div[data-testid="stTextInput"] {
-            max-width: 100px !important;
-            min-width: 100px !important;
+            max-width: 50px !important;
+            min-width: 50px !important;
             margin: 0 auto !important;
         }
     </style>
