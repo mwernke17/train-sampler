@@ -16,10 +16,11 @@ if 'original_pool' not in st.session_state:
     # Initialize text boxes empty
     for i in range(1, 21):
         st.session_state[f"box_{i}"] = ""
+        st.session_state[f"checked_box_{i}"] = False
 
 st.title("🎲 Train Random Sampler")
 
-# Single Next Number button handling
+# Next Number button logic
 if st.button("Next Number"):
     if st.session_state.remaining_sample:
         next_number = st.session_state.remaining_sample.pop(0)
@@ -37,6 +38,7 @@ if st.button("Reset"):
     st.session_state.current_number = None
     for i in range(1, 21):
         st.session_state[f"box_{i}"] = ""
+        st.session_state[f"checked_box_{i}"] = False
     st.success("🔄 Sampling reset!")
 
 st.write("### Numbers shown so far:")
@@ -73,27 +75,37 @@ for row in range(5):
     for col in range(12):
         box_num = input_positions.get((row, col))
         if box_num:
-            # Disable box if it already has a value
             disabled = st.session_state.get(f"box_{box_num}", "") != ""
 
-            # Button to assign current number to this box if not disabled and current_number exists
-            clicked = cols[col].button(f"Box {box_num}", key=f"btn_{box_num}", use_container_width=True)
-            if clicked and not disabled and st.session_state.current_number is not None:
+            cb_key = f"checked_box_{box_num}"
+            # Ensure checkbox state is synced with disabled inputs
+            if disabled:
+                st.session_state[cb_key] = True
+
+            checked = cols[col].checkbox(
+                label="",
+                value=st.session_state[cb_key],
+                key=cb_key,
+                disabled=disabled,
+                label_visibility="collapsed",
+            )
+
+            if checked and not disabled and st.session_state.current_number is not None:
                 st.session_state[f"box_{box_num}"] = str(st.session_state.current_number)
                 st.session_state.current_number = None
+                st.session_state[cb_key] = True
 
-            # Show the text input box with current value (disabled if already set)
             cols[col].text_input(
                 "",
                 key=f"box_{box_num}",
                 disabled=disabled,
                 label_visibility="collapsed",
-                placeholder="",
+                placeholder=""
             )
         else:
             cols[col].markdown(" ")
 
-# CSS for uniform 100x100 pixel boxes
+# CSS for uniform 100x100 pixel boxes and small centered checkboxes
 st.markdown("""
     <style>
         div[data-testid="stTextInput"] input {
@@ -109,6 +121,17 @@ st.markdown("""
             max-width: 100px !important;
             min-width: 100px !important;
             margin: 0 auto !important;
+        }
+        input[type="checkbox"] {
+            width: 15px !important;
+            height: 15px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+        div[role="checkbox"] {
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         button[kind="secondary"] {
             font-size: 12px;
