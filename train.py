@@ -17,15 +17,19 @@ if 'original_pool' not in st.session_state:
 
 st.title("🎲 Train Random Sampler")
 
-# Next Number button disabled if current number waiting to be assigned
-next_disabled = st.session_state.current_number is not None or len(st.session_state.remaining_sample) == 0
-if st.button("Next Number", disabled=next_disabled):
+# Function to get next number
+def get_next_number():
     if st.session_state.remaining_sample:
         st.session_state.current_number = st.session_state.remaining_sample.pop(0)
         st.session_state.output.append(st.session_state.current_number)
     else:
         st.warning("✅ All 20 numbers shown. Click 'Reset' to start again.")
         st.session_state.current_number = None
+
+# Next Number button disabled if current number waiting to be assigned
+next_disabled = st.session_state.current_number is not None or len(st.session_state.remaining_sample) == 0
+if st.button("Next Number", disabled=next_disabled):
+    get_next_number()
 
 if st.button("Reset"):
     st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
@@ -35,7 +39,7 @@ if st.button("Reset"):
     st.session_state.locked_boxes = set()
     for i in range(1, 21):
         st.session_state[f"box_{i}"] = ""
-    st.success("🔄 Sampling reset!")
+    st.rerun()
 
 st.write("### Numbers shown so far:")
 st.write(", ".join(str(num) for num in st.session_state.output))
@@ -74,6 +78,7 @@ def make_callback(box_num):
             if val == str(st.session_state.current_number):
                 st.session_state.locked_boxes.add(box_num)
                 st.session_state.current_number = None
+                get_next_number()
     return callback
 
 for row in range(5):
@@ -117,3 +122,7 @@ st.markdown("""
         }
     </style>
 """, unsafe_allow_html=True)
+
+# Auto-start with first number if current_number is None
+if st.session_state.current_number is None and st.session_state.remaining_sample:
+    get_next_number()
