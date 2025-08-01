@@ -12,7 +12,7 @@ if "numbers" not in st.session_state:
 
 st.title("Random Number Sampler")
 
-# Train logo near the top
+# Train logo near the top (unchanged from your original working code)
 st.image(
     "https://upload.wikimedia.org/wikipedia/commons/3/3f/Steam_locomotive_icon.svg",
     width=120,
@@ -41,29 +41,29 @@ st.divider()
 
 st.subheader("Enter Your Numbers")
 
-# Define individual inputs in the specified order with columns sized for spacing
+# Layout columns sized for stable spacing
 left_col, center_col, right_col = st.columns([1, 7, 1])
 
 with left_col:
-    # boxes 1 to 5 (bottom to top)
+    # Boxes 1 to 5 (bottom to top)
     for i in reversed(range(5)):
         st.text_input("", key=f"box_{i+1}", label_visibility="collapsed", max_chars=2,
                       placeholder="", help=f"Box {i+1}")
 
 with center_col:
-    # boxes 6 to 15 across the top
+    # Boxes 6 to 15 (top row)
     top_cols = st.columns(10)
     for i in range(10):
         top_cols[i].text_input("", key=f"box_{i+6}", label_visibility="collapsed", max_chars=2,
                                placeholder="", help=f"Box {i+6}")
 
 with right_col:
-    # boxes 16 to 20 (top to bottom)
+    # Boxes 16 to 20 (top to bottom)
     for i in range(5):
         st.text_input("", key=f"box_{i+16}", label_visibility="collapsed", max_chars=2,
                       placeholder="", help=f"Box {i+16}")
 
-# CSS for uniform input box size and spacing
+# CSS for uniform input box size and proper spacing
 st.markdown("""
     <style>
         div[data-testid="stTextInput"] input {
@@ -74,13 +74,13 @@ st.markdown("""
             font-size: 20px !important;
             text-align: center !important;
             padding: 0 6px !important;
-            margin: 0 4px 8px 4px !important;  /* Adds horizontal and bottom margin */
+            margin: 0 4px 8px 4px !important;
             box-sizing: border-box !important;
         }
         div[data-testid="stTextInput"] {
             min-width: 75px !important;
             max-width: 75px !important;
-            margin: 0 4px !important;  /* Adds spacing around container */
+            margin: 0 4px !important;
         }
         /* Prevent columns from shrinking too small */
         .css-1lcbmhc.e1fqkh3o3 {
