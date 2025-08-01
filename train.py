@@ -11,21 +11,18 @@ if "numbers" not in st.session_state:
 
 st.title("Random Number Sampler + Entry Grid")
 
-# Layout for the input boxes (rectangle without bottom)
+# Define individual inputs in the specified order
 left_column, center_column, right_column = st.columns([1, 3, 1])
 
 with left_column:
-    st.markdown("### Left Side")
-    left_inputs = [st.text_input("", key=f"left_{i}", label_visibility="collapsed", max_chars=2) for i in range(5)]
+    left_inputs = [st.text_input("", key=f"box_{i+1}", label_visibility="collapsed", max_chars=2) for i in reversed(range(5))]  # box_1 to box_5 from bottom to top
 
 with center_column:
-    st.markdown("### Top Row")
     top_cols = st.columns(10)
-    top_inputs = [top_cols[i].text_input("", key=f"top_{i}", label_visibility="collapsed", max_chars=2) for i in range(10)]
+    top_inputs = [top_cols[i].text_input("", key=f"box_{i+6}", label_visibility="collapsed", max_chars=2) for i in range(10)]  # box_6 to box_15 left to right
 
 with right_column:
-    st.markdown("### Right Side")
-    right_inputs = [st.text_input("", key=f"right_{i}", label_visibility="collapsed", max_chars=2) for i in range(5)]
+    right_inputs = [st.text_input("", key=f"box_{i+16}", label_visibility="collapsed", max_chars=2) for i in range(5)]  # box_16 to box_20 from top to bottom
 
 st.divider()
 
