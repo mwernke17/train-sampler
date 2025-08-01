@@ -12,8 +12,9 @@ if 'original_pool' not in st.session_state:
     st.session_state.remaining_sample = st.session_state.sampled_values.copy()
     st.session_state.output = []
 
-st.title("🎲 Train Random Sampler")
+st.title("🎲 Math Train Game")
 
+# --- Buttons ---
 if st.button("Next Number"):
     if st.session_state.remaining_sample:
         next_number = st.session_state.remaining_sample.pop(0)
@@ -25,11 +26,18 @@ if st.button("Reset"):
     st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
     st.session_state.remaining_sample = st.session_state.sampled_values.copy()
     st.session_state.output = []
-    # Clear all 20 text boxes
     for i in range(1, 21):
         st.session_state[f"box_{i}"] = ""
     st.success("🔄 Sampling reset!")
 
+# --- Show current number in large font ---
+if st.session_state.output:
+    latest_number = st.session_state.output[-1]
+    st.markdown(
+        f"<div style='font-size: 60px; text-align: center; color: darkblue; margin-top: 20px;'>🎯 {latest_number}</div>",
+        unsafe_allow_html=True
+    )
 
+# --- Show all previous numbers ---
 st.write("### Numbers shown so far:")
 st.write(", ".join(str(num) for num in st.session_state.output))
