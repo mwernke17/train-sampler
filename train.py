@@ -14,9 +14,7 @@ if 'original_pool' not in st.session_state:
 
 st.title("🎲 Train Random Sampler")
 
-# Display train image from GitHub raw link
-st.image("https://raw.githubusercontent.com/mwernke17/train-sampler/refs/heads/main/train.JPG", width=200)
-
+# Show Next Number button always
 if st.button("Next Number"):
     if st.session_state.remaining_sample:
         next_number = st.session_state.remaining_sample.pop(0)
@@ -24,11 +22,15 @@ if st.button("Next Number"):
     else:
         st.warning("✅ All 20 numbers shown. Click 'Reset' to start again.")
 
+if st.session_state.output:
+    # Show train image and last generated number big only if numbers exist
+    st.image("https://raw.githubusercontent.com/mwernke17/train-sampler/refs/heads/main/train.JPG", width=400)
+    st.markdown(f"<h1 style='text-align:center; font-size: 80px;'>{st.session_state.output[-1]}</h1>", unsafe_allow_html=True)
+
 if st.button("Reset"):
     st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
     st.session_state.remaining_sample = st.session_state.sampled_values.copy()
     st.session_state.output = []
-    # Clear all 20 text boxes
     for i in range(1, 21):
         st.session_state[f"box_{i}"] = ""
     st.success("🔄 Sampling reset!")
