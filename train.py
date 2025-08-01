@@ -84,80 +84,36 @@ for row in range(5):
     for col in range(12):
         box_num = input_positions.get((row, col))
         if box_num:
-            disabled = st.session_state[f"box_{box_num}"] != ""
-            cb_key = f"checked_box_{box_num}"
-            # Left vertical column: checkbox left, input right
+            disabled = st.session_state.get(f"box_{box_num}", "") != ""
+            col1, col2 = st.columns([1,5]) if col == 0 else (cols[col], None)
+            col_right1, col_right2 = st.columns([5,1]) if col == 11 else (cols[col], None)
+            
+            # For left column (col 0), put checkbox to left of text box
             if col == 0:
-                with cols[col]:
-                    left_col, right_col = st.columns([1, 3])
-                    with left_col:
-                        if not disabled:
-                            checked = st.checkbox(
-                                label="",
-                                key=cb_key,
-                                value=st.session_state[cb_key],
-                                label_visibility="collapsed",
-                            )
-                            # Assign current number only once when checked turns True
-                            if checked and st.session_state.current_number is not None:
-                                st.session_state[f"box_{box_num}"] = str(st.session_state.current_number)
-                                st.session_state.current_number = None
-                        else:
-                            st.checkbox("", key=cb_key, value=True, disabled=True, label_visibility="collapsed")
-                    with right_col:
-                        st.text_input(
-                            "",
-                            key=f"box_{box_num}",
-                            disabled=True,
-                            label_visibility="collapsed",
-                        )
-            # Right vertical column: input left, checkbox right
+                with col1:
+                    checked = st.checkbox("", key=f"chk_{box_num}", disabled=disabled)
+                with col2:
+                    val = st.text_input("", key=f"box_{box_num}", disabled=disabled, label_visibility="collapsed")
+            # For right column (col 11), put checkbox to right of text box
             elif col == 11:
-                with cols[col]:
-                    left_col, right_col = st.columns([3, 1])
-                    with left_col:
-                        st.text_input(
-                            "",
-                            key=f"box_{box_num}",
-                            disabled=True,
-                            label_visibility="collapsed",
-                        )
-                    with right_col:
-                        if not disabled:
-                            checked = st.checkbox(
-                                label="",
-                                key=cb_key,
-                                value=st.session_state[cb_key],
-                                label_visibility="collapsed",
-                            )
-                            if checked and st.session_state.current_number is not None:
-                                st.session_state[f"box_{box_num}"] = str(st.session_state.current_number)
-                                st.session_state.current_number = None
-                        else:
-                            st.checkbox("", key=cb_key, value=True, disabled=True, label_visibility="collapsed")
-            # Top row and others: checkbox above text input
+                with col_right1:
+                    val = st.text_input("", key=f"box_{box_num}", disabled=disabled, label_visibility="collapsed")
+                with col_right2:
+                    checked = st.checkbox("", key=f"chk_{box_num}", disabled=disabled)
             else:
-                with cols[col]:
-                    if not disabled:
-                        checked = st.checkbox(
-                            label="",
-                            key=cb_key,
-                            value=st.session_state[cb_key],
-                            label_visibility="collapsed",
-                        )
-                        if checked and st.session_state.current_number is not None:
-                            st.session_state[f"box_{box_num}"] = str(st.session_state.current_number)
-                            st.session_state.current_number = None
-                    else:
-                        st.checkbox("", key=cb_key, value=True, disabled=True, label_visibility="collapsed")
-                    st.text_input(
-                        "",
-                        key=f"box_{box_num}",
-                        disabled=True,
-                        label_visibility="collapsed",
-                    )
+                # For other boxes (top row), just show text input
+                val = cols[col].text_input("", key=f"box_{box_num}", disabled=disabled, label_visibility="collapsed")
+            
+            # If checkbox checked and box empty and there's a current number:
+            if (col == 0 or col == 11) and checked and not disabled and st.session_state.current_number is not None:
+                st.session_state[f"box_{box_num}"] = str(st.session_state.current_number)
+                st.session_state.current_number = None
+                # Also uncheck checkbox to avoid repeat (optional)
+                st.session_state[f"chk_{box_num}"] = False
+
         else:
             cols[col].markdown(" ")
+
 
 st.markdown("""
     <style>
