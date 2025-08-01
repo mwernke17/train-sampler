@@ -1,31 +1,60 @@
 import streamlit as st
 import random
 
-if 'original_pool' not in st.session_state:
-    st.session_state.original_pool = [
-        1,2,3,4,5,6,7,8,9,10,
-        11,11,12,12,13,13,14,14,15,15,
-        16,16,17,17,18,18,19,19,
-        20,21,22,23,24,25,26,27,28,29,30
-    ]
-    st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
-    st.session_state.remaining_sample = st.session_state.sampled_values.copy()
-    st.session_state.output = []
+st.set_page_config(page_title="Number Sampler", layout="wide")
 
-st.title("🎲 Train Random Sampler")
+# Initialize session state if needed
+if "numbers" not in st.session_state:
+    st.session_state.numbers = list(range(1, 11)) + [11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18, 19, 19] + list(range(20, 31))
+    random.shuffle(st.session_state.numbers)
+    st.session_state.sampled = []
 
-if st.button("Next Number"):
-    if st.session_state.remaining_sample:
-        next_number = st.session_state.remaining_sample.pop(0)
-        st.session_state.output.append(next_number)
-    else:
-        st.warning("✅ All 20 numbers shown. Click 'Reset' to start again.")
+st.title("Random Number Sampler + Entry Grid")
 
-if st.button("Reset"):
-    st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
-    st.session_state.remaining_sample = st.session_state.sampled_values.copy()
-    st.session_state.output = []
-    st.success("🔄 Sampling reset!")
+# Layout for the arrow path and input boxes
+left_column, center_column, right_column = st.columns([1, 3, 1])
 
-st.write("### Numbers shown so far:")
-st.write(", ".join(str(num) for num in st.session_state.output))
+with left_column:
+    st.markdown("### Left Side")
+    left_inputs = [st.text_input("", key=f"left_{i}", label_visibility="collapsed") for i in range(5)]
+
+with center_column:
+    st.markdown("### Top Row")
+    top_cols = st.columns(10)
+    top_inputs = [top_cols[i].text_input("", key=f"top_{i}", label_visibility="collapsed") for i in range(10)]
+    st.markdown("""
+    <div style='text-align: center;'>
+    ⬆️<br>
+    ⬆️<br>
+    ⬆️<br>
+    ⬆️<br>
+    ⬆️<br>
+    ➡️ ➡️ ➡️ ➡️ ➡️ ➡️ ➡️ ➡️ ➡️ ➡️<br>
+    ⬇️<br>
+    ⬇️<br>
+    ⬇️<br>
+    ⬇️<br>
+    ⬇️
+    </div>
+    """, unsafe_allow_html=True)
+
+with right_column:
+    st.markdown("### Right Side")
+    right_inputs = [st.text_input("", key=f"right_{i}", label_visibility="collapsed") for i in range(5)]
+
+st.divider()
+
+# Sampling logic
+st.subheader("Random Sampler")
+if len(st.session_state.sampled) < 20:
+    if st.button("Draw Next Number"):
+        next_number = st.session_state.numbers.pop()
+        st.session_state.sampled.append(next_number)
+        st.success(f"Next number: {next_number}")
+else:
+    st.warning("20 numbers drawn. Press below to reset.")
+
+if st.button("Reset Sampling"):
+    st.session_state.numbers = list(range(1, 11)) + [11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18, 19, 19] + list(range(20, 31))
+    random.shuffle(st.session_state.numbers)
+    st.session_state.sampled = []
