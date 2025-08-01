@@ -35,9 +35,16 @@ if st.button("Next Number", disabled=next_disabled):
     get_next_number()
 
 if st.button("Reset"):
-    for key in list(st.session_state.keys()):
-        del st.session_state[key]
-    st.experimental_rerun()
+    # Reset all states explicitly without rerun
+    st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
+    st.session_state.remaining_sample = st.session_state.sampled_values.copy()
+    st.session_state.output = []
+    st.session_state.current_number = None
+    st.session_state.locked_boxes = set()
+    st.session_state.awaiting_input = False
+    st.session_state.has_started = False
+    for i in range(1, 21):
+        st.session_state[f"box_{i}"] = ""
 
 st.write("### Numbers shown so far:")
 st.write(", ".join(str(num) for num in st.session_state.output))
@@ -121,13 +128,13 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Auto-start with first number only once
+# Auto-start with first number only once after reset or first load
 if (
-    st.session_state.current_number is None
+    not st.session_state.has_started
+    and st.session_state.current_number is None
     and st.session_state.remaining_sample
     and not st.session_state.awaiting_input
     and len(st.session_state.output) == 0
-    and not st.session_state.has_started
 ):
     st.session_state.has_started = True
     get_next_number()
