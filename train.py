@@ -34,7 +34,6 @@ st.divider()
 
 st.subheader("Enter Your Numbers")
 
-# Mapping grid positions to box numbers
 input_positions = {
     (4, 0): 1,
     (3, 0): 2,
@@ -58,30 +57,19 @@ input_positions = {
     (4, 11): 20,
 }
 
-# For each grid cell, render either an input box or empty space
 for row in range(5):
     cols = st.columns(12)
     for col in range(12):
         box_num = input_positions.get((row, col))
         if box_num:
-            # Disable box if already filled
-            disabled = st.session_state.get(f"box_{box_num}", "") != ""
-            
-            # Button to input number into box
-            if st.button(f"Input {box_num}", key=f"btn_{box_num}", use_container_width=True):
-                if not disabled and len(st.session_state.output) >= box_num:
-                    st.session_state[f"box_{box_num}"] = str(st.session_state.output[box_num - 1])
-            
-            # Show text input box with disabling if filled
             cols[col].text_input(
                 label="",
                 key=f"box_{box_num}",
-                disabled=disabled,
+                value="",  # no default value
                 label_visibility="collapsed",
-                placeholder="",
             )
         else:
-            cols[col].markdown(" ")  # empty cell
+            cols[col].markdown(" ")  # empty cell placeholder
 
 # CSS for uniform 100x100 pixel boxes
 st.markdown("""
@@ -99,10 +87,6 @@ st.markdown("""
             max-width: 100px !important;
             min-width: 100px !important;
             margin: 0 auto !important;
-        }
-        button[kind="secondary"] {
-            font-size: 12px;
-            padding: 2px 0;
         }
     </style>
 """, unsafe_allow_html=True)
