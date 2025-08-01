@@ -13,6 +13,7 @@ if 'original_pool' not in st.session_state:
     st.session_state.remaining_sample = st.session_state.sampled_values.copy()
     st.session_state.output = []
     st.session_state.current_number = None
+    st.session_state.locked_boxes = set()
 
 st.title("🎲 Train Random Sampler")
 
@@ -31,6 +32,7 @@ if st.button("Reset"):
     st.session_state.remaining_sample = st.session_state.sampled_values.copy()
     st.session_state.output = []
     st.session_state.current_number = None
+    st.session_state.locked_boxes = set()
     for i in range(1, 21):
         st.session_state[f"box_{i}"] = ""
     st.success("🔄 Sampling reset!")
@@ -70,7 +72,8 @@ def make_callback(box_num):
         val = st.session_state.get(key, "")
         if st.session_state.current_number is not None:
             if val == str(st.session_state.current_number):
-                st.session_state.current_number = None  # unlock Next button
+                st.session_state.locked_boxes.add(box_num)
+                st.session_state.current_number = None
     return callback
 
 for row in range(5):
@@ -80,11 +83,7 @@ for row in range(5):
         if box_num:
             key = f"box_{box_num}"
             value = st.session_state.get(key, "")
-            disabled = False
-
-            # Disable input if current_number is None and box is filled
-            if st.session_state.current_number is None and value != "":
-                disabled = True
+            disabled = box_num in st.session_state.locked_boxes
 
             cols[col].text_input(
                 label="",
