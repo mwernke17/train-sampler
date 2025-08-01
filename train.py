@@ -14,6 +14,9 @@ if 'original_pool' not in st.session_state:
 
 st.title("🎲 Train Random Sampler")
 
+# Display train image from GitHub raw link
+st.image("https://raw.githubusercontent.com/mwernke17/train-sampler/refs/heads/main/train.JPG", width=200)
+
 if st.button("Next Number"):
     if st.session_state.remaining_sample:
         next_number = st.session_state.remaining_sample.pop(0)
@@ -25,22 +28,10 @@ if st.button("Reset"):
     st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
     st.session_state.remaining_sample = st.session_state.sampled_values.copy()
     st.session_state.output = []
+    # Clear all 20 text boxes
     for i in range(1, 21):
         st.session_state[f"box_{i}"] = ""
     st.success("🔄 Sampling reset!")
-
-if st.session_state.output:
-    latest_number = st.session_state.output[-1]
-    train_img_url = "https://cdn-icons-png.flaticon.com/512/61/61293.png"
-    st.markdown(
-        f"""
-        <div style='text-align: center; margin-top: 20px;'>
-            <img src="{train_img_url}" alt="Train" width="60" style="vertical-align: middle;" />
-            <span style='font-size: 60px; color: darkblue; margin-left: 10px;'>{latest_number}</span>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
 
 st.write("### Numbers shown so far:")
 st.write(", ".join(str(num) for num in st.session_state.output))
