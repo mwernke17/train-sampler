@@ -29,3 +29,58 @@ if st.button("Reset"):
 
 st.write("### Numbers shown so far:")
 st.write(", ".join(str(num) for num in st.session_state.output))
+
+st.divider()
+st.subheader("Enter Your Numbers")
+
+left_col, center_col, right_col = st.columns([1, 10, 1])
+
+# Left column: boxes 1 to 5, bottom to top (reverse order in code)
+with left_col:
+    for i in reversed(range(1, 6)):
+        st.text_input(
+            label="",
+            key=f"box_{i}",
+            placeholder="",
+            label_visibility="collapsed",
+        )
+
+# Center column: boxes 6 to 15, left to right
+with center_col:
+    top_cols = st.columns(10)
+    for i in range(6, 16):
+        top_cols[i - 6].text_input(
+            label="",
+            key=f"box_{i}",
+            placeholder="",
+            label_visibility="collapsed",
+        )
+
+# Right column: boxes 16 to 20, top to bottom
+with right_col:
+    for i in range(16, 21):
+        st.text_input(
+            label="",
+            key=f"box_{i}",
+            placeholder="",
+            label_visibility="collapsed",
+        )
+
+# CSS for uniform 75x75 px boxes
+st.markdown("""
+    <style>
+        div[data-testid="stTextInput"] input {
+            width: 75px !important;
+            height: 75px !important;
+            font-size: 20px !important;
+            text-align: center !important;
+            padding: 0 !important;
+            margin: 5px auto !important;
+            box-sizing: border-box !important;
+        }
+        div[data-testid="stTextInput"] {
+            max-width: 75px !important;
+            min-width: 75px !important;
+            margin: 0 auto !important;
+        }
+    </style
