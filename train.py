@@ -1,60 +1,42 @@
 import streamlit as st
 import random
 
-st.set_page_config(page_title="Number Sampler", layout="wide")
+# Initialize numbers and state on first run
+if 'original_pool' not in st.session_state:
+    st.session_state.original_pool = [
+        1,2,3,4,5,6,7,8,9,10,
+        11,11,12,12,13,13,14,14,15,15,
+        16,16,17,17,18,18,19,19,
+        20,21,22,23,24,25,26,27,28,29,30
+    ]
+    st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
+    st.session_state.remaining_sample = st.session_state.sampled_values.copy()
+    st.session_state.output = []
+    st.session_state.current_number = None
 
-# Handle reset with a flag
-if "reset_flag" not in st.session_state:
-    st.session_state.reset_flag = False
+st.title("🎲 Train Random Sampler")
 
-if st.session_state.reset_flag:
-    st.session_state.numbers = list(range(1, 11)) + [11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18, 19, 19] + list(range(20, 31))
-    random.shuffle(st.session_state.numbers)
-    st.session_state.sampled = []
+# Next Number button disabled if current number waiting to be assigned
+next_disabled = st.session_state.current_number is not None or len(st.session_state.remaining_sample) == 0
+if st.button("Next Number", disabled=next_disabled):
+    if st.session_state.remaining_sample:
+        st.session_state.current_number = st.session_state.remaining_sample.pop(0)
+        st.session_state.output.append(st.session_state.current_number)
+    else:
+        st.warning("✅ All 20 numbers shown. Click 'Reset' to start again.")
+        st.session_state.current_number = None
+
+if st.button("Reset"):
+    st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
+    st.session_state.remaining_sample = st.session_state.sampled_values.copy()
+    st.session_state.output = []
+    st.session_state.current_number = None
     for i in range(1, 21):
         st.session_state[f"box_{i}"] = ""
-    st.session_state.reset_flag = False
-    st.session_state.last_drawn_index = 0
+    st.success("🔄 Sampling reset!")
 
-# Initialize if missing
-if "numbers" not in st.session_state:
-    st.session_state.numbers = list(range(1, 11)) + [11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18, 19, 19] + list(range(20, 31))
-    random.shuffle(st.session_state.numbers)
-    st.session_state.sampled = []
-    st.session_state.last_drawn_index = 0
-
-st.title("Random Number Sampler")
-
-st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Steam_locomotive_icon.svg/120px-Steam_locomotive_icon.svg.png", width=100)
-
-st.subheader("Random Sampler")
-
-# Determine if we can draw a new number
-allow_draw = (
-    len(st.session_state.sampled) < 20 and 
-    st.session_state.last_drawn_index == len(st.session_state.sampled)
-)
-
-if allow_draw:
-    if st.button("Draw Next Number"):
-        next_number = st.session_state.numbers.pop()
-        st.session_state.sampled.append(next_number)
-        st.session_state.last_drawn_index = len(st.session_state.sampled)
-        st.success(f"Next number: {next_number}")
-else:
-    if len(st.session_state.sampled) >= 20:
-        st.warning("20 numbers drawn. Press below to reset.")
-    elif st.session_state.last_drawn_index > len([i for i in range(1, 21) if st.session_state.get(f"box_{i}")]):
-        st.info("Please place the last number before drawing the next.")
-
-# Display sampled so far
-if st.session_state.sampled:
-    st.info("Numbers drawn so far: " + ", ".join(map(str, st.session_state.sampled)))
-
-# Reset button
-if st.button("Reset Sampling"):
-    st.session_state.reset_flag = True
-    st.experimental_rerun()
+st.write("### Numbers shown so far:")
+st.write(", ".join(str(num) for num in st.session_state.output))
 
 st.divider()
 st.subheader("Enter Your Numbers")
@@ -82,37 +64,57 @@ input_positions = {
     (4, 11): 20,
 }
 
+def make_callback(box_num):
+    def callback():
+        key = f"box_{box_num}"
+        val = st.session_state.get(key, "")
+        if st.session_state.current_number is not None:
+            if val == str(st.session_state.current_number):
+                st.session_state.current_number = None  # unlock Next button
+    return callback
+
 for row in range(5):
     cols = st.columns(12)
     for col in range(12):
-        index = input_positions.get((row, col))
-        if index:
-            disabled = f"box_{index}" in st.session_state and st.session_state[f"box_{index}"] != ""
-            if st.button(f"Input {index}", key=f"btn_{index}", use_container_width=True):
-                if not disabled and len(st.session_state.sampled) >= index:
-                    st.session_state[f"box_{index}"] = str(st.session_state.sampled[index - 1])
-                    st.session_state.last_drawn_index = index  # allow next draw
+        box_num = input_positions.get((row, col))
+        if box_num:
+            key = f"box_{box_num}"
+            value = st.session_state.get(key, "")
+            disabled = False
+
+            # Disable input if current_number is None and box is filled
+            if st.session_state.current_number is None and value != "":
+                disabled = True
+
             cols[col].text_input(
-                "",
-                key=f"box_{index}",
-                label_visibility="collapsed",
+                label="",
+                key=key,
+                value=value,
                 disabled=disabled,
-                placeholder=""
+                label_visibility="collapsed",
+                on_change=make_callback(box_num),
             )
         else:
-            cols[col].markdown(" ")  # empty cell
+            cols[col].markdown(" ")
 
+# CSS for uniform 50x50 boxes with margin
 st.markdown("""
     <style>
-        input[type="text"] {
-            width: 100px !important;
-            height: 100px !important;
+        div[data-testid="stTextInput"] input {
+            width: 50px !important;
+            height: 50px !important;
+            font-size: 25px !important;
             text-align: center !important;
-            font-size: 22px !important;
+            padding: 0 !important;
+            margin: 5px auto !important;
+            box-sizing: border-box !important;
         }
-        button[kind="secondary"] {
-            font-size: 12px;
-            padding: 2px 0;
+        div[data-testid="stTextInput"] {
+            max-width: 50px !important;
+            min-width: 50px !important;
+            max-height: 50px !important;
+            min-height: 50px !important;
+            margin: 5px auto !important;
         }
     </style>
 """, unsafe_allow_html=True)
