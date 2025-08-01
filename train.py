@@ -33,7 +33,8 @@ if st.button("Reset"):
 # Display the latest number with a train PNG image and large font
 if st.session_state.output:
     latest_number = st.session_state.output[-1]
-    train_img_url = "https://cdn-icons-png.flaticon.com/512/53/53730.png"
+    # Reliable train icon from Wikimedia Commons
+    train_img_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Emoji_u1f682.svg/1024px-Emoji_u1f682.svg.png"
     st.markdown(
         f"""
         <div style='text-align: center; margin-top: 20px;'>
