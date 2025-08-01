@@ -67,16 +67,12 @@ input_positions = {
 def make_callback(box_num):
     def callback():
         key = f"box_{box_num}"
-        val = st.session_state.get(key, "")
-        # If current_number exists:
-        if st.session_state.current_number is not None:
-            # Check if text matches current_number exactly
-            if val == str(st.session_state.current_number):
-                # Correct entry, lock box by clearing current_number
-                st.session_state.current_number = None
-            else:
-                # Wrong entry, keep current_number set (disable Next button)
-                pass
+        val = st.session_state.get(key)
+        # If current number exists and box is empty, assign current_number forcibly
+        if st.session_state.current_number is not None and (val == "" or val is None):
+            st.session_state[key] = str(st.session_state.current_number)
+            st.session_state.current_number = None
+            # To avoid rerun loop, no call to st.experimental_rerun()
     return callback
 
 for row in range(5):
@@ -86,18 +82,8 @@ for row in range(5):
         if box_num:
             key = f"box_{box_num}"
             value = st.session_state.get(key, "")
-            # Disable box only if value matches assigned number exactly (locked)
-            disabled = False
-            # If box is filled with the assigned number, disable it
-            if value != "" and st.session_state.current_number is None:
-                # This means current_number assigned and matched, so lock
-                disabled = True
-            elif value != "" and st.session_state.current_number is not None:
-                # If current_number waiting and value doesn't match it, keep unlocked
-                disabled = False
-            else:
-                # Empty box and no current number assigned - unlocked
-                disabled = False
+            disabled = value != ""  # disable if box filled
+            st.session_state.setdefault(key, "")  # initialize if missing
 
             cols[col].text_input(
                 label="",
