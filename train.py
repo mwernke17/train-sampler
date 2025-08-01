@@ -13,10 +13,10 @@ if 'original_pool' not in st.session_state:
     st.session_state.remaining_sample = st.session_state.sampled_values.copy()
     st.session_state.output = []
     st.session_state.current_number = None
-    # Initialize text boxes empty
+    # Initialize text boxes empty and checkbox states false
     for i in range(1, 21):
-        st.session_state[f"box_{i}"] = ""
-        st.session_state[f"checked_box_{i}"] = False
+        st.session_state.setdefault(f"box_{i}", "")
+        st.session_state.setdefault(f"checked_box_{i}", False)
 
 st.title("🎲 Train Random Sampler")
 
@@ -70,6 +70,15 @@ input_positions = {
     (4, 11): 20,
 }
 
+# Before rendering: sync checked_box states with filled inputs
+for i in range(1, 21):
+    if st.session_state.get(f"box_{i}", "") != "":
+        st.session_state[f"checked_box_{i}"] = True
+    else:
+        # Only reset checkbox if box is empty and no current_number assignment pending
+        if st.session_state.get(f"checked_box_{i}", False) and st.session_state.current_number is None:
+            st.session_state[f"checked_box_{i}"] = False
+
 for row in range(5):
     cols = st.columns(12)
     for col in range(12):
@@ -78,9 +87,6 @@ for row in range(5):
             disabled = st.session_state.get(f"box_{box_num}", "") != ""
 
             cb_key = f"checked_box_{box_num}"
-            # Ensure checkbox state is synced with disabled inputs
-            if disabled:
-                st.session_state[cb_key] = True
 
             checked = cols[col].checkbox(
                 label="",
@@ -90,10 +96,11 @@ for row in range(5):
                 label_visibility="collapsed",
             )
 
+            # React to user checking a box *only* if box not disabled and current_number available
             if checked and not disabled and st.session_state.current_number is not None:
                 st.session_state[f"box_{box_num}"] = str(st.session_state.current_number)
                 st.session_state.current_number = None
-                st.session_state[cb_key] = True
+                # st.session_state[cb_key] = True  # Already set by checkbox widget itself
 
             cols[col].text_input(
                 "",
@@ -105,33 +112,43 @@ for row in range(5):
         else:
             cols[col].markdown(" ")
 
-# CSS for uniform 100x100 pixel boxes and small centered checkboxes
+# CSS for uniform sizes: 
+#   - boxes container 75x75 px max/min,
+#   - text input inside 50x50 px max/min,
+#   - smaller checkboxes centered
 st.markdown("""
     <style>
+        div[data-testid="stTextInput"] {
+            max-width: 75px !important;
+            min-width: 75px !important;
+            max-height: 75px !important;
+            min-height: 75px !important;
+            margin: 0 auto !important;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
         div[data-testid="stTextInput"] input {
-            width: 100px !important;
-            height: 100px !important;
+            width: 50px !important;
+            height: 50px !important;
             font-size: 22px !important;
             text-align: center !important;
             padding: 0 !important;
             margin: 0 auto !important;
             box-sizing: border-box !important;
         }
-        div[data-testid="stTextInput"] {
-            max-width: 100px !important;
-            min-width: 100px !important;
-            margin: 0 auto !important;
-        }
         input[type="checkbox"] {
             width: 15px !important;
             height: 15px !important;
             margin-left: auto !important;
             margin-right: auto !important;
+            display: block !important;
         }
         div[role="checkbox"] {
             display: flex;
             justify-content: center;
             align-items: center;
+            margin-bottom: 4px;
         }
         button[kind="secondary"] {
             font-size: 12px;
