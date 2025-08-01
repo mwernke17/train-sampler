@@ -21,26 +21,27 @@ if st.button("Next Number"):
     else:
         st.warning("✅ All 20 numbers shown. Click 'Reset' to start again.")
 
-if st.session_state.output:
-    number = st.session_state.output[-1]
-    # Flex container to put image and number inline, vertically centered
-    st.markdown(
-        f"""
-        <div style="display: flex; align-items: center; gap: 20px; margin-top: 20px;">
-            <img src="https://raw.githubusercontent.com/mwernke17/train-sampler/refs/heads/main/train.JPG" width="200" />
-            <div style="font-size: 100px; font-weight: bold; user-select: none;">{number}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
 if st.button("Reset"):
     st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
     st.session_state.remaining_sample = st.session_state.sampled_values.copy()
     st.session_state.output = []
+    # Clear all 20 text boxes
     for i in range(1, 21):
         st.session_state[f"box_{i}"] = ""
     st.success("🔄 Sampling reset!")
 
 st.write("### Numbers shown so far:")
 st.write(", ".join(str(num) for num in st.session_state.output))
+
+# Show train logo and last number inline only if at least one number shown
+if st.session_state.output:
+    number = st.session_state.output[-1]
+    st.markdown(
+        f"""
+        <div style="display: flex; align-items: center; gap: 20px; margin-top: 20px;">
+            <img src="https://raw.githubusercontent.com/mwernke17/train-sampler/refs/heads/main/train.JPG" width="175" />
+            <div style="font-size: 80px; font-weight: bold; color: red; user-select: none;">{number}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
