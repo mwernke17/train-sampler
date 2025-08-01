@@ -11,36 +11,21 @@ if "numbers" not in st.session_state:
 
 st.title("Random Number Sampler + Entry Grid")
 
-# Layout for the arrow path and input boxes
+# Layout for the input boxes (rectangle without bottom)
 left_column, center_column, right_column = st.columns([1, 3, 1])
 
 with left_column:
     st.markdown("### Left Side")
-    left_inputs = [st.text_input("", key=f"left_{i}", label_visibility="collapsed") for i in range(5)]
+    left_inputs = [st.text_input("", key=f"left_{i}", label_visibility="collapsed", max_chars=2) for i in range(5)]
 
 with center_column:
     st.markdown("### Top Row")
     top_cols = st.columns(10)
-    top_inputs = [top_cols[i].text_input("", key=f"top_{i}", label_visibility="collapsed") for i in range(10)]
-    st.markdown("""
-    <div style='text-align: center;'>
-    ⬆️<br>
-    ⬆️<br>
-    ⬆️<br>
-    ⬆️<br>
-    ⬆️<br>
-    ➡️ ➡️ ➡️ ➡️ ➡️ ➡️ ➡️ ➡️ ➡️ ➡️<br>
-    ⬇️<br>
-    ⬇️<br>
-    ⬇️<br>
-    ⬇️<br>
-    ⬇️
-    </div>
-    """, unsafe_allow_html=True)
+    top_inputs = [top_cols[i].text_input("", key=f"top_{i}", label_visibility="collapsed", max_chars=2) for i in range(10)]
 
 with right_column:
     st.markdown("### Right Side")
-    right_inputs = [st.text_input("", key=f"right_{i}", label_visibility="collapsed") for i in range(5)]
+    right_inputs = [st.text_input("", key=f"right_{i}", label_visibility="collapsed", max_chars=2) for i in range(5)]
 
 st.divider()
 
