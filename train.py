@@ -5,19 +5,26 @@ st.set_page_config(page_title="Number Sampler", layout="wide")
 
 # Initialize session state if needed
 if "numbers" not in st.session_state:
-    st.session_state.numbers = list(range(1, 11)) + [11, 11, 12, 12, 13, 13, 14, 14, 15, 15,
-                                                    16, 16, 17, 17, 18, 18, 19, 19] + list(range(20, 31))
+    st.session_state.numbers = list(range(1, 11)) + [11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18, 19, 19] + list(range(20, 31))
     random.shuffle(st.session_state.numbers)
     st.session_state.sampled = []
 
 st.title("Random Number Sampler")
 
-# Train logo near the top (unchanged from your original working code)
-st.image(
-    "https://upload.wikimedia.org/wikipedia/commons/3/3f/Steam_locomotive_icon.svg",
-    width=120,
-    output_format="PNG"
-)
+# Updated train logo with consistent rendering
+st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Steam_locomotive_icon.svg/120px-Steam_locomotive_icon.svg.png", width=120)
+
+# Apply consistent size using CSS targeting Streamlit text inputs inside columns
+st.markdown("""
+    <style>
+        div[data-testid="stTextInput"] input {
+            width: 100px !important;
+            height: 50px !important;
+            text-align: center !important;
+            font-size: 20px !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 st.subheader("Random Sampler")
 if len(st.session_state.sampled) < 20:
@@ -32,8 +39,7 @@ if st.session_state.sampled:
     st.info("Numbers drawn so far: " + ", ".join(map(str, st.session_state.sampled)))
 
 if st.button("Reset Sampling"):
-    st.session_state.numbers = list(range(1, 11)) + [11, 11, 12, 12, 13, 13, 14, 14, 15, 15,
-                                                    16, 16, 17, 17, 18, 18, 19, 19] + list(range(20, 31))
+    st.session_state.numbers = list(range(1, 11)) + [11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18, 19, 19] + list(range(20, 31))
     random.shuffle(st.session_state.numbers)
     st.session_state.sampled = []
 
@@ -41,50 +47,19 @@ st.divider()
 
 st.subheader("Enter Your Numbers")
 
-# Layout columns sized for stable spacing
-left_col, center_col, right_col = st.columns([1, 7, 1])
+# Define individual inputs in the specified order
+left_column, center_column, right_column = st.columns([1, 3, 1])
 
-with left_col:
-    # Boxes 1 to 5 (bottom to top)
-    for i in reversed(range(5)):
-        st.text_input("", key=f"box_{i+1}", label_visibility="collapsed", max_chars=2,
-                      placeholder="", help=f"Box {i+1}")
+with left_column:
+    left_inputs = [st.text_input("", key=f"box_{i+1}", label_visibility="collapsed", max_chars=2,
+                                  placeholder="", help=f"Box {i+1}") for i in reversed(range(5))]
 
-with center_col:
-    # Boxes 6 to 15 (top row)
+with center_column:
     top_cols = st.columns(10)
-    for i in range(10):
-        top_cols[i].text_input("", key=f"box_{i+6}", label_visibility="collapsed", max_chars=2,
-                               placeholder="", help=f"Box {i+6}")
+    top_inputs = [top_cols[i].text_input("", key=f"box_{i+6}", label_visibility="collapsed", max_chars=2,
+                                         placeholder="", help=f"Box {i+6}") for i in range(10)]
 
-with right_col:
-    # Boxes 16 to 20 (top to bottom)
-    for i in range(5):
-        st.text_input("", key=f"box_{i+16}", label_visibility="collapsed", max_chars=2,
-                      placeholder="", help=f"Box {i+16}")
+with right_column:
+    right_inputs = [st.text_input("", key=f"box_{i+16}", label_visibility="collapsed", max_chars=2,
+                                   placeholder="", help=f"Box {i+16}") for i in range(5)]
 
-# CSS for uniform input box size and proper spacing
-st.markdown("""
-    <style>
-        div[data-testid="stTextInput"] input {
-            width: 75px !important;
-            min-width: 75px !important;
-            max-width: 75px !important;
-            height: 50px !important;
-            font-size: 20px !important;
-            text-align: center !important;
-            padding: 0 6px !important;
-            margin: 0 4px 8px 4px !important;
-            box-sizing: border-box !important;
-        }
-        div[data-testid="stTextInput"] {
-            min-width: 75px !important;
-            max-width: 75px !important;
-            margin: 0 4px !important;
-        }
-        /* Prevent columns from shrinking too small */
-        .css-1lcbmhc.e1fqkh3o3 {
-            min-width: 80px !important;
-        }
-    </style>
-""", unsafe_allow_html=True)
