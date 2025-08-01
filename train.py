@@ -22,16 +22,17 @@ if st.button("Next Number"):
         st.warning("✅ All 20 numbers shown. Click 'Reset' to start again.")
 
 if st.session_state.output:
-    cols = st.columns([1, 2])  # train image takes less width
-    with cols[0]:
-        st.image("https://raw.githubusercontent.com/mwernke17/train-sampler/refs/heads/main/train.JPG", width=200)
-    with cols[1]:
-        st.markdown(
-            f"<h1 style='display: flex; align-items: center; height: 200px; margin: 0;'>"
-            f"{st.session_state.output[-1]}"
-            f"</h1>", 
-            unsafe_allow_html=True
-        )
+    number = st.session_state.output[-1]
+    # Flex container to put image and number inline, vertically centered
+    st.markdown(
+        f"""
+        <div style="display: flex; align-items: center; gap: 20px; margin-top: 20px;">
+            <img src="https://raw.githubusercontent.com/mwernke17/train-sampler/refs/heads/main/train.JPG" width="200" />
+            <div style="font-size: 100px; font-weight: bold; user-select: none;">{number}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 if st.button("Reset"):
     st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
