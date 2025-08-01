@@ -1,6 +1,7 @@
 import streamlit as st
 import random
 
+# Initialize numbers and state on first run
 if 'original_pool' not in st.session_state:
     st.session_state.original_pool = [
         1,2,3,4,5,6,7,8,9,10,
@@ -11,31 +12,33 @@ if 'original_pool' not in st.session_state:
     st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
     st.session_state.remaining_sample = st.session_state.sampled_values.copy()
     st.session_state.output = []
+    st.session_state.current_number = None
 
 st.title("🎲 Train Random Sampler")
 
-if st.button("Next Number"):
+# Next Number button disabled if current number waiting to be assigned
+next_disabled = st.session_state.current_number is not None or len(st.session_state.remaining_sample) == 0
+if st.button("Next Number", disabled=next_disabled):
     if st.session_state.remaining_sample:
-        next_number = st.session_state.remaining_sample.pop(0)
-        st.session_state.output.append(next_number)
+        st.session_state.current_number = st.session_state.remaining_sample.pop(0)
+        st.session_state.output.append(st.session_state.current_number)
     else:
         st.warning("✅ All 20 numbers shown. Click 'Reset' to start again.")
+        st.session_state.current_number = None
 
 if st.button("Reset"):
     st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
     st.session_state.remaining_sample = st.session_state.sampled_values.copy()
     st.session_state.output = []
-    # Clear all 20 text boxes
+    st.session_state.current_number = None
     for i in range(1, 21):
         st.session_state[f"box_{i}"] = ""
     st.success("🔄 Sampling reset!")
-
 
 st.write("### Numbers shown so far:")
 st.write(", ".join(str(num) for num in st.session_state.output))
 
 st.divider()
-
 st.subheader("Enter Your Numbers")
 
 input_positions = {
@@ -61,21 +64,39 @@ input_positions = {
     (4, 11): 20,
 }
 
+def make_callback(box_num):
+    def callback():
+        key = f"box_{box_num}"
+        val = st.session_state.get(key)
+        # If current number exists and box is empty, assign current_number forcibly
+        if st.session_state.current_number is not None and (val == "" or val is None):
+            st.session_state[key] = str(st.session_state.current_number)
+            st.session_state.current_number = None
+            # To avoid rerun loop, no call to st.experimental_rerun()
+    return callback
+
 for row in range(5):
     cols = st.columns(12)
     for col in range(12):
         box_num = input_positions.get((row, col))
         if box_num:
+            key = f"box_{box_num}"
+            value = st.session_state.get(key, "")
+            disabled = value != ""  # disable if box filled
+            st.session_state.setdefault(key, "")  # initialize if missing
+
             cols[col].text_input(
                 label="",
-                key=f"box_{box_num}",
-                value="",  # no default value
+                key=key,
+                value=value,
+                disabled=disabled,
                 label_visibility="collapsed",
+                on_change=make_callback(box_num),
             )
         else:
-            cols[col].markdown(" ")  # empty cell placeholder
+            cols[col].markdown(" ")
 
-# CSS for uniform 100x100 pixel boxes
+# CSS for uniform 50x50 boxes with margin
 st.markdown("""
     <style>
         div[data-testid="stTextInput"] input {
@@ -84,15 +105,15 @@ st.markdown("""
             font-size: 25px !important;
             text-align: center !important;
             padding: 0 !important;
-            margin: 0 auto !important;
+            margin: 5px auto !important;
             box-sizing: border-box !important;
         }
         div[data-testid="stTextInput"] {
             max-width: 50px !important;
             min-width: 50px !important;
-             max-height: 50px !important;
+            max-height: 50px !important;
             min-height: 50px !important;
-            margin: 0 auto !important;
+            margin: 5px auto !important;
         }
     </style>
 """, unsafe_allow_html=True)
