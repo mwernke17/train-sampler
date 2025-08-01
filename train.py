@@ -11,8 +11,8 @@ if "numbers" not in st.session_state:
 
 st.title("Random Number Sampler")
 
-# Updated train logo with fallback
-st.image("https://upload.wikimedia.org/wikipedia/commons/3/3f/Steam_locomotive_icon.svg", width=100)
+# Fixed train logo reference from original version
+st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Steam_locomotive_icon.svg/120px-Steam_locomotive_icon.svg.png", width=100)
 
 st.subheader("Random Sampler")
 if len(st.session_state.sampled) < 20:
@@ -55,7 +55,7 @@ with right_column:
 st.markdown("""
     <style>
         input[type="text"] {
-            width: 70px !important;
+            width: 100px !important;
             height: 50px !important;
             text-align: center !important;
             font-size: 20px !important;
