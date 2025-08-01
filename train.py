@@ -1,6 +1,8 @@
 import streamlit as st
 import random
 
+st.set_page_config(page_title="Train Random Sampler", layout="wide")
+
 # Initialize original pool and sampling
 if 'original_pool' not in st.session_state:
     st.session_state.original_pool = [
@@ -12,35 +14,44 @@ if 'original_pool' not in st.session_state:
     st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
     st.session_state.remaining_sample = st.session_state.sampled_values.copy()
     st.session_state.output = []
-    st.session_state.current_number = None
-    # Initialize text boxes empty and checkbox states false
+    # Initialize boxes empty
     for i in range(1, 21):
-        st.session_state.setdefault(f"box_{i}", "")
-        st.session_state.setdefault(f"checked_box_{i}", False)
+        st.session_state[f"box_{i}"] = ""
+    # Initialize checkboxes states
+    for i in range(1, 21):
+        st.session_state[f"checked_box_{i}"] = False
+    st.session_state.current_number = None
 
 st.title("🎲 Train Random Sampler")
 
-# Disable "Next Number" button if current_number is waiting to be entered
-next_disabled = st.session_state.current_number is not None
-
-if st.button("Next Number", disabled=next_disabled):
+def draw_next_number():
     if st.session_state.remaining_sample:
-        next_number = st.session_state.remaining_sample.pop(0)
-        st.session_state.output.append(next_number)
-        st.session_state.current_number = next_number
+        next_num = st.session_state.remaining_sample.pop(0)
+        st.session_state.output.append(next_num)
+        st.session_state.current_number = next_num
     else:
         st.warning("✅ All 20 numbers shown. Click 'Reset' to start again.")
         st.session_state.current_number = None
 
-if st.button("Reset"):
+def reset_all():
     st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
     st.session_state.remaining_sample = st.session_state.sampled_values.copy()
     st.session_state.output = []
-    st.session_state.current_number = None
     for i in range(1, 21):
         st.session_state[f"box_{i}"] = ""
         st.session_state[f"checked_box_{i}"] = False
+    st.session_state.current_number = None
     st.success("🔄 Sampling reset!")
+
+if st.session_state.current_number is None:
+    if st.button("Next Number"):
+        draw_next_number()
+else:
+    st.write(f"Next number to place: **{st.session_state.current_number}**")
+    st.write("Please click a box to assign this number before drawing next.")
+
+if st.button("Reset"):
+    reset_all()
 
 st.write("### Numbers shown so far:")
 st.write(", ".join(str(num) for num in st.session_state.output))
@@ -71,91 +82,93 @@ input_positions = {
     (4, 11): 20,
 }
 
-# Sync checked state based on filled boxes
-for i in range(1, 21):
-    if st.session_state.get(f"box_{i}", "") != "":
-        st.session_state[f"checked_box_{i}"] = True
-    else:
-        # Reset checkbox if box empty and no current_number waiting
-        if st.session_state.get(f"checked_box_{i}", False) and st.session_state.current_number is None:
-            st.session_state[f"checked_box_{i}"] = False
+def on_check(box_num):
+    if not st.session_state[f"checked_box_{box_num}"]:
+        # Ignore if unchecked (should not happen because we disable checkbox once checked)
+        return
+    if st.session_state[f"box_{box_num}"] == "" and st.session_state.current_number is not None:
+        st.session_state[f"box_{box_num}"] = str(st.session_state.current_number)
+        st.session_state.current_number = None
+        # Disable the checkbox after checking (simulate lock)
+        st.session_state[f"checked_box_{box_num}"] = True
+    st.experimental_rerun()
 
 for row in range(5):
-    cols = st.columns(12)
+    cols = st.columns(12, gap="large")
     for col in range(12):
         box_num = input_positions.get((row, col))
         if box_num:
-            disabled = st.session_state.get(f"box_{box_num}", "") != ""
+            disabled = st.session_state[f"box_{box_num}"] != ""
             cb_key = f"checked_box_{box_num}"
-            checked_val = st.session_state[cb_key]
-
-            # For left vertical column (col=0): checkbox to left, textbox to right
-            if col == 0 and row in range(5):
+            # Layout for vertical left side (col 0): checkbox left, input right
+            if col == 0:
                 with cols[col]:
-                    left_col, right_col = st.columns([1,4])
+                    left_col, right_col = st.columns([1, 3])
                     with left_col:
-                        checked = st.checkbox(
-                            label="",
-                            value=checked_val,
-                            key=cb_key,
-                            disabled=disabled,
-                            label_visibility="collapsed",
-                        )
+                        if not disabled:
+                            st.checkbox(
+                                label="",
+                                key=cb_key,
+                                value=st.session_state[cb_key],
+                                on_change=on_check,
+                                args=(box_num,),
+                                label_visibility="collapsed",
+                            )
+                        else:
+                            st.checkbox("", key=cb_key, value=True, disabled=True, label_visibility="collapsed")
                     with right_col:
                         st.text_input(
                             "",
                             key=f"box_{box_num}",
-                            disabled=disabled,
+                            disabled=True,
                             label_visibility="collapsed",
-                            placeholder="",
                         )
-            # For right vertical column (col=11): text box to left, checkbox to right
-            elif col == 11 and row in range(5):
+            # Layout for vertical right side (col 11): input left, checkbox right
+            elif col == 11:
                 with cols[col]:
-                    left_col, right_col = st.columns([4,1])
+                    left_col, right_col = st.columns([3, 1])
                     with left_col:
                         st.text_input(
                             "",
                             key=f"box_{box_num}",
-                            disabled=disabled,
+                            disabled=True,
                             label_visibility="collapsed",
-                            placeholder="",
                         )
                     with right_col:
-                        checked = st.checkbox(
-                            label="",
-                            value=checked_val,
-                            key=cb_key,
-                            disabled=disabled,
-                            label_visibility="collapsed",
-                        )
-            # Elsewhere: checkbox above text input (center top row)
+                        if not disabled:
+                            st.checkbox(
+                                label="",
+                                key=cb_key,
+                                value=st.session_state[cb_key],
+                                on_change=on_check,
+                                args=(box_num,),
+                                label_visibility="collapsed",
+                            )
+                        else:
+                            st.checkbox("", key=cb_key, value=True, disabled=True, label_visibility="collapsed")
+            # Top row and others: checkbox above text input
             else:
                 with cols[col]:
-                    checked = st.checkbox(
-                        label="",
-                        value=checked_val,
-                        key=cb_key,
-                        disabled=disabled,
-                        label_visibility="collapsed",
-                    )
+                    if not disabled:
+                        st.checkbox(
+                            label="",
+                            key=cb_key,
+                            value=st.session_state[cb_key],
+                            on_change=on_check,
+                            args=(box_num,),
+                            label_visibility="collapsed",
+                        )
+                    else:
+                        st.checkbox("", key=cb_key, value=True, disabled=True, label_visibility="collapsed")
                     st.text_input(
                         "",
                         key=f"box_{box_num}",
-                        disabled=disabled,
+                        disabled=True,
                         label_visibility="collapsed",
-                        placeholder="",
                     )
-            
-            # Handle checkbox clicked logic
-            if checked and not disabled and st.session_state.current_number is not None:
-                st.session_state[f"box_{box_num}"] = str(st.session_state.current_number)
-                st.session_state.current_number = None
-                st.session_state[cb_key] = True
         else:
             cols[col].markdown(" ")
 
-# CSS adjustments for spacing
 st.markdown("""
     <style>
         div[data-testid="stTextInput"] {
@@ -180,25 +193,15 @@ st.markdown("""
         input[type="checkbox"] {
             width: 15px !important;
             height: 15px !important;
-            margin: 0 auto !important;
+            margin: 0 auto 5px auto !important;
             display: block !important;
+            cursor: pointer;
         }
         div[role="checkbox"] {
             display: flex;
             justify-content: center;
             align-items: center;
             margin-bottom: 4px;
-        }
-        /* Add 20px gap between top row columns (cols 1 to 10 in row 0) */
-        /* Note: Streamlit columns don't have easy direct selectors; workaround with margin */
-        section[data-testid="stColumns"] > div:nth-child(1) > div > div > div:nth-child(1) {
-            margin-right: 20px !important;
-        }
-        /* Add margin-right to top row except last box (16th box col=11) */
-        /* We add margin-right to cols in row=0 and col=1 to 10 */
-        /* Unfortunately, no direct CSS selector for grid cells, so adding margin-right on all except last column */
-        section[data-testid="stColumns"] > div > div > div > div > div > div > div > div {
-            margin-right: 0px !important;
         }
     </style>
 """, unsafe_allow_html=True)
