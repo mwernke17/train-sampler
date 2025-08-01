@@ -30,9 +30,6 @@ if st.button("Reset"):
         st.session_state[f"box_{i}"] = ""
     st.success("🔄 Sampling reset!")
 
-st.write("### Numbers shown so far:")
-st.write(", ".join(str(num) for num in st.session_state.output))
-
 # Show train logo and last number inline only if at least one number shown
 if st.session_state.output:
     number = st.session_state.output[-1]
@@ -45,3 +42,8 @@ if st.session_state.output:
         """,
         unsafe_allow_html=True,
     )
+
+st.write("### Numbers shown so far:")
+st.write(", ".join(str(num) for num in st.session_state.output))
+
+
