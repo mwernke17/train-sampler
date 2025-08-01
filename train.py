@@ -43,9 +43,14 @@ if st.session_state.output:
         unsafe_allow_html=True,
     )
 
-# Make "Numbers shown so far:" 5 points bigger (about 23pt)
+
 st.markdown(
-    '<h3 style="font-size: 50pt;">Numbers shown so far:</h3>', 
+    '<h3 style="font-size: 36pt;">Numbers shown so far:</h3>', 
     unsafe_allow_html=True
 )
-st.write(", ".join(str(num) for num in st.session_state.output))
+
+numbers_str = ", ".join(str(num) for num in st.session_state.output)
+st.markdown(
+    f'<div style="font-size:30pt;">{numbers_str}</div>',
+    unsafe_allow_html=True
+)
