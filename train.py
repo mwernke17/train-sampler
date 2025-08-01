@@ -82,4 +82,116 @@ input_positions = {
 for row in range(5):
     cols = st.columns(12, gap="large")
     for col in range(12):
-        box_num = input_positi
+        box_num = input_positions.get((row, col))
+        if box_num:
+            disabled = st.session_state[f"box_{box_num}"] != ""
+            cb_key = f"checked_box_{box_num}"
+            # Left vertical column: checkbox left, input right
+            if col == 0:
+                with cols[col]:
+                    left_col, right_col = st.columns([1, 3])
+                    with left_col:
+                        if not disabled:
+                            checked = st.checkbox(
+                                label="",
+                                key=cb_key,
+                                value=st.session_state[cb_key],
+                                label_visibility="collapsed",
+                            )
+                            # Assign current number only once when checked turns True
+                            if checked and st.session_state.current_number is not None:
+                                st.session_state[f"box_{box_num}"] = str(st.session_state.current_number)
+                                st.session_state.current_number = None
+                        else:
+                            st.checkbox("", key=cb_key, value=True, disabled=True, label_visibility="collapsed")
+                    with right_col:
+                        st.text_input(
+                            "",
+                            key=f"box_{box_num}",
+                            disabled=True,
+                            label_visibility="collapsed",
+                        )
+            # Right vertical column: input left, checkbox right
+            elif col == 11:
+                with cols[col]:
+                    left_col, right_col = st.columns([3, 1])
+                    with left_col:
+                        st.text_input(
+                            "",
+                            key=f"box_{box_num}",
+                            disabled=True,
+                            label_visibility="collapsed",
+                        )
+                    with right_col:
+                        if not disabled:
+                            checked = st.checkbox(
+                                label="",
+                                key=cb_key,
+                                value=st.session_state[cb_key],
+                                label_visibility="collapsed",
+                            )
+                            if checked and st.session_state.current_number is not None:
+                                st.session_state[f"box_{box_num}"] = str(st.session_state.current_number)
+                                st.session_state.current_number = None
+                        else:
+                            st.checkbox("", key=cb_key, value=True, disabled=True, label_visibility="collapsed")
+            # Top row and others: checkbox above text input
+            else:
+                with cols[col]:
+                    if not disabled:
+                        checked = st.checkbox(
+                            label="",
+                            key=cb_key,
+                            value=st.session_state[cb_key],
+                            label_visibility="collapsed",
+                        )
+                        if checked and st.session_state.current_number is not None:
+                            st.session_state[f"box_{box_num}"] = str(st.session_state.current_number)
+                            st.session_state.current_number = None
+                    else:
+                        st.checkbox("", key=cb_key, value=True, disabled=True, label_visibility="collapsed")
+                    st.text_input(
+                        "",
+                        key=f"box_{box_num}",
+                        disabled=True,
+                        label_visibility="collapsed",
+                    )
+        else:
+            cols[col].markdown(" ")
+
+st.markdown("""
+    <style>
+        div[data-testid="stTextInput"] {
+            max-width: 75px !important;
+            min-width: 75px !important;
+            max-height: 75px !important;
+            min-height: 75px !important;
+            margin: 0 auto 10px auto !important;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        div[data-testid="stTextInput"] input {
+            width: 50px !important;
+            height: 50px !important;
+            font-size: 22px !important;
+            text-align: center !important;
+            padding: 0 !important;
+            margin: 0 auto !important;
+            box-sizing: border-box !important;
+        }
+        input[type="checkbox"] {
+            width: 15px !important;
+            height: 15px !important;
+            margin: 0 auto 5px auto !important;
+            display: block !important;
+            cursor: pointer;
+        }
+        div[role="checkbox"] {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+    </style>
+""", unsafe_allow_html=True)
