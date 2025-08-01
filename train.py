@@ -1,66 +1,31 @@
 import streamlit as st
 import random
 
-st.set_page_config(page_title="Number Sampler", layout="wide")
+if 'original_pool' not in st.session_state:
+    st.session_state.original_pool = [
+        1,2,3,4,5,6,7,8,9,10,
+        11,11,12,12,13,13,14,14,15,15,
+        16,16,17,17,18,18,19,19,
+        20,21,22,23,24,25,26,27,28,29,30
+    ]
+    st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
+    st.session_state.remaining_sample = st.session_state.sampled_values.copy()
+    st.session_state.output = []
 
-# Initialize session state if needed
-if "numbers" not in st.session_state:
-    st.session_state.numbers = list(range(1, 11)) + [11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18, 19, 19] + list(range(20, 31))
-    random.shuffle(st.session_state.numbers)
-    st.session_state.sampled = []
+st.title("🎲 Train Random Sampler")
 
-st.title("Random Number Sampler")
+if st.button("Next Number"):
+    if st.session_state.remaining_sample:
+        next_number = st.session_state.remaining_sample.pop(0)
+        st.session_state.output.append(next_number)
+    else:
+        st.warning("✅ All 20 numbers shown. Click 'Reset' to start again.")
 
-# Updated train logo with consistent rendering
-st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Steam_locomotive_icon.svg/120px-Steam_locomotive_icon.svg.png", width=120)
+if st.button("Reset"):
+    st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
+    st.session_state.remaining_sample = st.session_state.sampled_values.copy()
+    st.session_state.output = []
+    st.success("🔄 Sampling reset!")
 
-# Apply consistent size using CSS targeting Streamlit text inputs inside columns
-st.markdown("""
-    <style>
-        div[data-testid="stTextInput"] input {
-            width: 100px !important;
-            height: 50px !important;
-            text-align: center !important;
-            font-size: 20px !important;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-st.subheader("Random Sampler")
-if len(st.session_state.sampled) < 20:
-    if st.button("Draw Next Number"):
-        next_number = st.session_state.numbers.pop()
-        st.session_state.sampled.append(next_number)
-        st.success(f"Next number: {next_number}")
-else:
-    st.warning("20 numbers drawn. Press below to reset.")
-
-if st.session_state.sampled:
-    st.info("Numbers drawn so far: " + ", ".join(map(str, st.session_state.sampled)))
-
-if st.button("Reset Sampling"):
-    st.session_state.numbers = list(range(1, 11)) + [11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18, 19, 19] + list(range(20, 31))
-    random.shuffle(st.session_state.numbers)
-    st.session_state.sampled = []
-
-st.divider()
-
-st.subheader("Enter Your Numbers")
-
-# Define individual inputs in the specified order
-left_column, center_column, right_column = st.columns([1, 3, 1])
-
-with left_column:
-    left_inputs = [st.text_input("", key=f"box_{i+1}", label_visibility="collapsed", max_chars=2,
-                                  placeholder="", help=f"Box {i+1}") for i in reversed(range(5))]
-
-with center_column:
-    top_cols = st.columns(10)
-    top_inputs = [top_cols[i].text_input("", key=f"box_{i+6}", label_visibility="collapsed", max_chars=2,
-                                         placeholder="", help=f"Box {i+6}") for i in range(10)]
-
-with right_column:
-    right_inputs = [st.text_input("", key=f"box_{i+16}", label_visibility="collapsed", max_chars=2,
-                                   placeholder="", help=f"Box {i+16}") for i in range(5)]
-
-
+st.write("### Numbers shown so far:")
+st.write(", ".join(str(num) for num in st.session_state.output))
