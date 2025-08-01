@@ -73,16 +73,13 @@ input_positions = {
     (4, 11): 20,
 }
 
-# Render the grid row by row
 for row in range(5):
     cols = st.columns(12, gap="medium")
     for col in range(12):
         box_num = input_positions.get((row, col))
         if box_num:
-            # Is box filled?
             disabled = st.session_state[f"box_{box_num}"] != ""
-
-            # Left column checkboxes (col 0)
+            # Left column checkboxes + box (col 0)
             if col == 0:
                 with cols[col]:
                     checked = st.checkbox(
@@ -91,7 +88,7 @@ for row in range(5):
                         disabled=disabled or (st.session_state.current_number is None),
                         value=st.session_state[f"chk_{box_num}"],
                         label_visibility="collapsed",
-                        help=f"Check to assign current number to box {box_num}",
+                        help=f"Assign current number to box {box_num}",
                     )
                 with cols[col+1]:
                     st.text_input(
@@ -101,13 +98,12 @@ for row in range(5):
                         disabled=True,
                         label_visibility="collapsed",
                     )
-                # If checkbox just checked, assign number
                 if checked and not disabled and st.session_state.current_number is not None:
                     st.session_state[f"box_{box_num}"] = str(st.session_state.current_number)
                     st.session_state.current_number = None
                     st.session_state[f"chk_{box_num}"] = False
 
-            # Right column checkboxes (col 11)
+            # Right column box + checkboxes (col 11)
             elif col == 11:
                 with cols[col-1]:
                     st.text_input(
@@ -124,7 +120,7 @@ for row in range(5):
                         disabled=disabled or (st.session_state.current_number is None),
                         value=st.session_state[f"chk_{box_num}"],
                         label_visibility="collapsed",
-                        help=f"Check to assign current number to box {box_num}",
+                        help=f"Assign current number to box {box_num}",
                     )
                 if checked and not disabled and st.session_state.current_number is not None:
                     st.session_state[f"box_{box_num}"] = str(st.session_state.current_number)
