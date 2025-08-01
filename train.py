@@ -27,7 +27,10 @@ def get_next_number():
         st.session_state.output.append(st.session_state.current_number)
         st.session_state.awaiting_input = True
     else:
-        st.warning("✅ All 20 numbers shown. Click 'Reset' to start again.")
+        # Calculate runs for final message
+        runs = calculate_runs()
+        runs_str = ", ".join(str(r) for r in runs)
+        st.warning(f"✅ All 20 numbers shown. Runs: {runs_str}. Click 'Reset' to start again.")
         st.session_state.current_number = None
         st.session_state.awaiting_input = False
 
@@ -77,6 +80,32 @@ input_positions = {
     (3, 11): 19,
     (4, 11): 20,
 }
+
+def calculate_runs():
+    entered_numbers = []
+    for i in range(1, 21):
+        val = st.session_state.get(f"box_{i}", "")
+        try:
+            entered_numbers.append(int(val))
+        except:
+            entered_numbers.append(None)
+
+    runs = []
+    if entered_numbers:
+        run_length = 1
+        for i in range(1, len(entered_numbers)):
+            prev = entered_numbers[i-1]
+            curr = entered_numbers[i]
+            if prev is None or curr is None:
+                runs.append(run_length)
+                run_length = 1
+            elif curr >= prev:
+                run_length += 1
+            else:
+                runs.append(run_length)
+                run_length = 1
+        runs.append(run_length)
+    return runs
 
 def make_callback(box_num):
     def callback():
@@ -144,30 +173,7 @@ if (
     st.session_state.has_started = True
     get_next_number()
 
-# --- Calculate runs of non-decreasing sequences ---
-entered_numbers = []
-for i in range(1, 21):
-    val = st.session_state.get(f"box_{i}", "")
-    try:
-        entered_numbers.append(int(val))
-    except:
-        entered_numbers.append(None)
-
-runs = []
-if entered_numbers:
-    run_length = 1
-    for i in range(1, len(entered_numbers)):
-        prev = entered_numbers[i-1]
-        curr = entered_numbers[i]
-        if prev is None or curr is None:
-            runs.append(run_length)
-            run_length = 1
-        elif curr >= prev:
-            run_length += 1
-        else:
-            runs.append(run_length)
-            run_length = 1
-    runs.append(run_length)
-
+# --- Calculate and display runs below inputs ---
+runs = calculate_runs()
 st.write("### Runs of non-decreasing numbers:")
 st.write(runs)
