@@ -1,8 +1,8 @@
 import streamlit as st
 import random
 
-# Initialize numbers and state on first run
-if 'original_pool' not in st.session_state:
+# Initialize on first run
+if 'initialized' not in st.session_state:
     st.session_state.original_pool = [
         1,2,3,4,5,6,7,8,9,10,
         11,11,12,12,13,13,14,14,15,15,
@@ -15,7 +15,7 @@ if 'original_pool' not in st.session_state:
     st.session_state.current_number = None
     st.session_state.locked_boxes = set()
     st.session_state.awaiting_input = False
-    st.session_state.has_started = False
+    st.session_state.initialized = True
 
 st.title("🎲 Train Random Sampler")
 
@@ -29,20 +29,20 @@ def get_next_number():
         st.session_state.current_number = None
         st.session_state.awaiting_input = False
 
-# Disable Next Number button if waiting for input or no numbers remain
+# Next number button logic:
+# It is enabled only if not awaiting input and numbers remain
 next_disabled = st.session_state.awaiting_input or len(st.session_state.remaining_sample) == 0
+
 if st.button("Next Number", disabled=next_disabled):
     get_next_number()
 
 if st.button("Reset"):
-    # Reset all states explicitly without rerun
     st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
     st.session_state.remaining_sample = st.session_state.sampled_values.copy()
     st.session_state.output = []
     st.session_state.current_number = None
     st.session_state.locked_boxes = set()
     st.session_state.awaiting_input = False
-    st.session_state.has_started = False
     for i in range(1, 21):
         st.session_state[f"box_{i}"] = ""
 
@@ -79,6 +79,7 @@ def make_callback(box_num):
     def callback():
         key = f"box_{box_num}"
         val = st.session_state.get(key, "")
+        # Only validate if a current number is active and matches the current box number
         if st.session_state.current_number is not None:
             if val == str(st.session_state.current_number):
                 st.session_state.locked_boxes.add(box_num)
@@ -94,7 +95,6 @@ for row in range(5):
             key = f"box_{box_num}"
             value = st.session_state.get(key, "")
             disabled = box_num in st.session_state.locked_boxes
-
             cols[col].text_input(
                 label="",
                 key=key,
@@ -127,14 +127,3 @@ st.markdown("""
         }
     </style>
 """, unsafe_allow_html=True)
-
-# Auto-start with first number only once after reset or first load
-if (
-    not st.session_state.has_started
-    and st.session_state.current_number is None
-    and st.session_state.remaining_sample
-    and not st.session_state.awaiting_input
-    and len(st.session_state.output) == 0
-):
-    st.session_state.has_started = True
-    get_next_number()
