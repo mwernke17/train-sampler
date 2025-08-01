@@ -1,87 +1,66 @@
 import streamlit as st
 import random
 
-if 'original_pool' not in st.session_state:
-    st.session_state.original_pool = [
-        1,2,3,4,5,6,7,8,9,10,
-        11,11,12,12,13,13,14,14,15,15,
-        16,16,17,17,18,18,19,19,
-        20,21,22,23,24,25,26,27,28,29,30
-    ]
-    st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
-    st.session_state.remaining_sample = st.session_state.sampled_values.copy()
-    st.session_state.output = []
+st.set_page_config(page_title="Number Sampler", layout="wide")
 
-st.title("🎲 Train Random Sampler")
+# Initialize session state if needed
+if "numbers" not in st.session_state:
+    st.session_state.numbers = list(range(1, 11)) + [11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18, 19, 19] + list(range(20, 31))
+    random.shuffle(st.session_state.numbers)
+    st.session_state.sampled = []
 
-if st.button("Next Number"):
-    if st.session_state.remaining_sample:
-        next_number = st.session_state.remaining_sample.pop(0)
-        st.session_state.output.append(next_number)
-    else:
-        st.warning("✅ All 20 numbers shown. Click 'Reset' to start again.")
+st.title("Random Number Sampler")
 
-if st.button("Reset"):
-    st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
-    st.session_state.remaining_sample = st.session_state.sampled_values.copy()
-    st.session_state.output = []
-    st.success("🔄 Sampling reset!")
+# Fixed train logo reference from original version
+st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Steam_locomotive_icon.svg/120px-Steam_locomotive_icon.svg.png", width=100)
 
-st.write("### Numbers shown so far:")
-st.write(", ".join(str(num) for num in st.session_state.output))
+st.subheader("Random Sampler")
+if len(st.session_state.sampled) < 20:
+    if st.button("Draw Next Number"):
+        next_number = st.session_state.numbers.pop()
+        st.session_state.sampled.append(next_number)
+        st.success(f"Next number: {next_number}")
+else:
+    st.warning("20 numbers drawn. Press below to reset.")
+
+if st.session_state.sampled:
+    st.info("Numbers drawn so far: " + ", ".join(map(str, st.session_state.sampled)))
+
+if st.button("Reset Sampling"):
+    st.session_state.numbers = list(range(1, 11)) + [11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18, 19, 19] + list(range(20, 31))
+    random.shuffle(st.session_state.numbers)
+    st.session_state.sampled = []
+    for i in range(1, 21):
+        st.session_state[f"box_{i}"] = ""
 
 st.divider()
+
 st.subheader("Enter Your Numbers")
 
-left_col, center_col, right_col = st.columns([1, 10, 1])
+# Define individual inputs in the specified order
+left_column, center_column, right_column = st.columns([1, 3, 1])
 
-# Left column: boxes 1 to 5, bottom to top (reverse order in code)
-with left_col:
-    for i in reversed(range(1, 6)):
-        st.text_input(
-            label="",
-            key=f"box_{i}",
-            placeholder="",
-            label_visibility="collapsed",
-        )
+with left_column:
+    left_inputs = [st.text_input("", key=f"box_{i+1}", label_visibility="collapsed", max_chars=2,
+                                  placeholder="", help=f"Box {i+1}") for i in reversed(range(5))]
 
-# Center column: boxes 6 to 15, left to right
-with center_col:
+with center_column:
     top_cols = st.columns(10)
-    for i in range(6, 16):
-        top_cols[i - 6].text_input(
-            label="",
-            key=f"box_{i}",
-            placeholder="",
-            label_visibility="collapsed",
-        )
+    top_inputs = [top_cols[i].text_input("", key=f"box_{i+6}", label_visibility="collapsed", max_chars=2,
+                                         placeholder="", help=f"Box {i+6}") for i in range(10)]
 
-# Right column: boxes 16 to 20, top to bottom
-with right_col:
-    for i in range(16, 21):
-        st.text_input(
-            label="",
-            key=f"box_{i}",
-            placeholder="",
-            label_visibility="collapsed",
-        )
+with right_column:
+    right_inputs = [st.text_input("", key=f"box_{i+16}", label_visibility="collapsed", max_chars=2,
+                                   placeholder="", help=f"Box {i+16}") for i in range(5)]
 
-# CSS for uniform 75x75 px boxes
+# Apply consistent size using CSS
 st.markdown("""
     <style>
-        div[data-testid="stTextInput"] input {
-            width: 75px !important;
-            height: 75px !important;
-            font-size: 20px !important;
+        input[type="text"] {
+            width: 100px !important;
+            height: 50px !important;
             text-align: center !important;
-            padding: 0 !important;
-            margin: 5px auto !important;
-            box-sizing: border-box !important;
-        }
-        div[data-testid="stTextInput"] {
-            max-width: 75px !important;
-            min-width: 75px !important;
-            margin: 0 auto !important;
+            font-size: 20px !important;
         }
     </style>
 """, unsafe_allow_html=True)
