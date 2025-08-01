@@ -12,11 +12,19 @@ if "numbers" not in st.session_state:
 st.title("Random Number Sampler")
 
 # Updated train logo with consistent rendering
-st.image(
-    "https://upload.wikimedia.org/wikipedia/commons/3/3f/Steam_locomotive_icon.svg",
-    width=120,
-    output_format="PNG"
-)
+st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Steam_locomotive_icon.svg/120px-Steam_locomotive_icon.svg.png", width=120)
+
+# Apply consistent size using CSS targeting Streamlit text inputs inside columns
+st.markdown("""
+    <style>
+        div[data-testid="stTextInput"] input {
+            width: 100px !important;
+            height: 50px !important;
+            text-align: center !important;
+            font-size: 20px !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 st.subheader("Random Sampler")
 if len(st.session_state.sampled) < 20:
@@ -55,14 +63,4 @@ with right_column:
     right_inputs = [st.text_input("", key=f"box_{i+16}", label_visibility="collapsed", max_chars=2,
                                    placeholder="", help=f"Box {i+16}") for i in range(5)]
 
-# Apply consistent size using CSS targeting Streamlit text inputs inside columns
-st.markdown("""
-    <style>
-        div[data-testid="stTextInput"] input {
-            width: 100px !important;
-            height: 50px !important;
-            text-align: center !important;
-            font-size: 20px !important;
-        }
-    </style>
-""", unsafe_allow_html=True)
+
