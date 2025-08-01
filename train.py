@@ -28,14 +28,11 @@ if st.button("Next Number", disabled=next_disabled):
         st.session_state.current_number = None
 
 if st.button("Reset"):
-    st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
-    st.session_state.remaining_sample = st.session_state.sampled_values.copy()
-    st.session_state.output = []
-    st.session_state.current_number = None
-    st.session_state.locked_boxes = set()
-    for i in range(1, 21):
-        st.session_state[f"box_{i}"] = ""
-    st.success("🔄 Sampling reset!")
+    # Clear all keys in session_state to fully reset everything
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
+    st.rerun()
+
 
 st.write("### Numbers shown so far:")
 st.write(", ".join(str(num) for num in st.session_state.output))
