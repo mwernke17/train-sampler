@@ -14,25 +14,30 @@ if 'original_pool' not in st.session_state:
     st.session_state.output = []
     st.session_state.current_number = None
     st.session_state.locked_boxes = set()
+    st.session_state.awaiting_input = False
+    st.session_state.has_started = False
 
 st.title("🎲 Train Random Sampler")
 
-# Next Number button disabled if current number waiting to be assigned
-next_disabled = st.session_state.current_number is not None or len(st.session_state.remaining_sample) == 0
-if st.button("Next Number", disabled=next_disabled):
+def get_next_number():
     if st.session_state.remaining_sample:
         st.session_state.current_number = st.session_state.remaining_sample.pop(0)
         st.session_state.output.append(st.session_state.current_number)
+        st.session_state.awaiting_input = True
     else:
         st.warning("✅ All 20 numbers shown. Click 'Reset' to start again.")
         st.session_state.current_number = None
+        st.session_state.awaiting_input = False
+
+# Disable Next Number button if waiting for input or no numbers remain
+next_disabled = st.session_state.awaiting_input or len(st.session_state.remaining_sample) == 0
+if st.button("Next Number", disabled=next_disabled):
+    get_next_number()
 
 if st.button("Reset"):
-    # Clear all keys in session_state to fully reset everything
     for key in list(st.session_state.keys()):
         del st.session_state[key]
-    st.rerun()
-
+    st.experimental_rerun()
 
 st.write("### Numbers shown so far:")
 st.write(", ".join(str(num) for num in st.session_state.output))
@@ -70,6 +75,7 @@ def make_callback(box_num):
         if st.session_state.current_number is not None:
             if val == str(st.session_state.current_number):
                 st.session_state.locked_boxes.add(box_num)
+                st.session_state.awaiting_input = False
                 st.session_state.current_number = None
     return callback
 
@@ -114,3 +120,14 @@ st.markdown("""
         }
     </style>
 """, unsafe_allow_html=True)
+
+# Auto-start with first number only once
+if (
+    st.session_state.current_number is None
+    and st.session_state.remaining_sample
+    and not st.session_state.awaiting_input
+    and len(st.session_state.output) == 0
+    and not st.session_state.has_started
+):
+    st.session_state.has_started = True
+    get_next_number()
