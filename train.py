@@ -25,7 +25,11 @@ if st.button("Reset"):
     st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
     st.session_state.remaining_sample = st.session_state.sampled_values.copy()
     st.session_state.output = []
+    # Clear all 20 text boxes
+    for i in range(1, 21):
+        st.session_state[f"box_{i}"] = ""
     st.success("🔄 Sampling reset!")
+
 
 st.write("### Numbers shown so far:")
 st.write(", ".join(str(num) for num in st.session_state.output))
