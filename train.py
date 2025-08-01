@@ -1,7 +1,6 @@
 import streamlit as st
 import random
 
-# Initialize the pool and sample on first run
 if 'original_pool' not in st.session_state:
     st.session_state.original_pool = [
         1,2,3,4,5,6,7,8,9,10,
@@ -30,11 +29,9 @@ if st.button("Reset"):
         st.session_state[f"box_{i}"] = ""
     st.success("🔄 Sampling reset!")
 
-# Display the latest number with a train PNG image and large font
 if st.session_state.output:
     latest_number = st.session_state.output[-1]
-    # Reliable train icon from Wikimedia Commons
-    train_img_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Emoji_u1f682.svg/1024px-Emoji_u1f682.svg.png"
+    train_img_url = "https://cdn-icons-png.flaticon.com/512/61/61293.png"
     st.markdown(
         f"""
         <div style='text-align: center; margin-top: 20px;'>
