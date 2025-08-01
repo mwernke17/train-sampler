@@ -16,6 +16,7 @@ if 'original_pool' not in st.session_state:
     st.session_state.locked_boxes = set()
     st.session_state.awaiting_input = False
     st.session_state.box_counter = 1
+    st.session_state.has_started = False
 
 st.title("🎲 Train Random Sampler")
 
@@ -43,6 +44,7 @@ if st.button("Reset"):
     st.session_state.locked_boxes = set()
     st.session_state.awaiting_input = False
     st.session_state.box_counter = 1
+    st.session_state.has_started = False
     for i in range(1, 21):
         st.session_state[f"box_{i}"] = ""
     st.rerun()
@@ -137,5 +139,7 @@ if (
     and st.session_state.remaining_sample 
     and not st.session_state.awaiting_input 
     and len(st.session_state.output) == 0
+    and not st.session_state.has_started
 ):
+    st.session_state.has_started = True
     get_next_number()
