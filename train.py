@@ -1,6 +1,7 @@
 import streamlit as st
 import random
 
+# Initialize the pool and sample on first run
 if 'original_pool' not in st.session_state:
     st.session_state.original_pool = [
         1,2,3,4,5,6,7,8,9,10,
@@ -12,9 +13,8 @@ if 'original_pool' not in st.session_state:
     st.session_state.remaining_sample = st.session_state.sampled_values.copy()
     st.session_state.output = []
 
-st.title("🎲 Math Train Game")
+st.title("🎲 Train Random Sampler")
 
-# --- Buttons ---
 if st.button("Next Number"):
     if st.session_state.remaining_sample:
         next_number = st.session_state.remaining_sample.pop(0)
@@ -30,14 +30,19 @@ if st.button("Reset"):
         st.session_state[f"box_{i}"] = ""
     st.success("🔄 Sampling reset!")
 
-# --- Show current number in large font ---
+# Display the latest number with a train image and large font
 if st.session_state.output:
     latest_number = st.session_state.output[-1]
+    train_img_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Steam_train_icon.svg/1024px-Steam_train_icon.svg.png"
     st.markdown(
-        f"<div style='font-size: 60px; text-align: center; color: darkblue; margin-top: 20px;'>🎯 {latest_number}</div>",
-        unsafe_allow_html=True
+        f"""
+        <div style='text-align: center; margin-top: 20px;'>
+            <img src="{train_img_url}" alt="Train" width="60" style="vertical-align: middle;" />
+            <span style='font-size: 60px; color: darkblue; margin-left: 10px;'>{latest_number}</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
-# --- Show all previous numbers ---
 st.write("### Numbers shown so far:")
 st.write(", ".join(str(num) for num in st.session_state.output))
