@@ -15,6 +15,7 @@ if 'initialized' not in st.session_state:
     st.session_state.current_number = None
     st.session_state.locked_boxes = set()
     st.session_state.awaiting_input = False
+    st.session_state.next_button_pressed = False
     st.session_state.initialized = True
 
 st.title("🎲 Train Random Sampler")
@@ -24,17 +25,22 @@ def get_next_number():
         st.session_state.current_number = st.session_state.remaining_sample.pop(0)
         st.session_state.output.append(st.session_state.current_number)
         st.session_state.awaiting_input = True
+        st.session_state.next_button_pressed = True  # mark that next number was just fetched
     else:
         st.warning("✅ All 20 numbers shown. Click 'Reset' to start again.")
         st.session_state.current_number = None
         st.session_state.awaiting_input = False
+        st.session_state.next_button_pressed = False
 
-# Next number button logic:
-# It is enabled only if not awaiting input and numbers remain
+# Control Next Number button:
+# Disable if waiting for input or no numbers remain
 next_disabled = st.session_state.awaiting_input or len(st.session_state.remaining_sample) == 0
 
+# Button press with debouncing logic
 if st.button("Next Number", disabled=next_disabled):
-    get_next_number()
+    # Only allow if not already pressed and waiting for input is False
+    if not st.session_state.next_button_pressed and not st.session_state.awaiting_input:
+        get_next_number()
 
 if st.button("Reset"):
     st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
@@ -43,6 +49,7 @@ if st.button("Reset"):
     st.session_state.current_number = None
     st.session_state.locked_boxes = set()
     st.session_state.awaiting_input = False
+    st.session_state.next_button_pressed = False
     for i in range(1, 21):
         st.session_state[f"box_{i}"] = ""
 
@@ -79,12 +86,12 @@ def make_callback(box_num):
     def callback():
         key = f"box_{box_num}"
         val = st.session_state.get(key, "")
-        # Only validate if a current number is active and matches the current box number
         if st.session_state.current_number is not None:
             if val == str(st.session_state.current_number):
                 st.session_state.locked_boxes.add(box_num)
                 st.session_state.awaiting_input = False
                 st.session_state.current_number = None
+                st.session_state.next_button_pressed = False  # reset the flag so next number can be generated
     return callback
 
 for row in range(5):
