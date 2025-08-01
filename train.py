@@ -15,6 +15,7 @@ if 'original_pool' not in st.session_state:
     st.session_state.current_number = None
     st.session_state.locked_boxes = set()
     st.session_state.awaiting_input = False
+    st.session_state.box_counter = 1
 
 st.title("🎲 Train Random Sampler")
 
@@ -41,6 +42,7 @@ if st.button("Reset"):
     st.session_state.current_number = None
     st.session_state.locked_boxes = set()
     st.session_state.awaiting_input = False
+    st.session_state.box_counter = 1
     for i in range(1, 21):
         st.session_state[f"box_{i}"] = ""
     st.rerun()
@@ -83,6 +85,7 @@ def make_callback(box_num):
                 st.session_state.locked_boxes.add(box_num)
                 st.session_state.awaiting_input = False
                 st.session_state.current_number = None
+                st.session_state.box_counter += 1
                 get_next_number()
     return callback
 
@@ -128,6 +131,11 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Auto-start with first number if not initialized
-if st.session_state.current_number is None and st.session_state.remaining_sample and not st.session_state.awaiting_input:
+# Auto-start with first number only once
+if (
+    st.session_state.current_number is None 
+    and st.session_state.remaining_sample 
+    and not st.session_state.awaiting_input 
+    and len(st.session_state.output) == 0
+):
     get_next_number()
