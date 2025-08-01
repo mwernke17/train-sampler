@@ -83,4 +83,5 @@ st.markdown("""
             min-width: 75px !important;
             margin: 0 auto !important;
         }
-    </style
+    </style>
+""", unsafe_allow_html=True)
