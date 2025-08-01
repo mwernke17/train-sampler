@@ -30,10 +30,10 @@ if st.button("Reset"):
         st.session_state[f"box_{i}"] = ""
     st.success("🔄 Sampling reset!")
 
-# Display the latest number with a train image and large font
+# Display the latest number with a train PNG image and large font
 if st.session_state.output:
     latest_number = st.session_state.output[-1]
-    train_img_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Steam_train_icon.svg/1024px-Steam_train_icon.svg.png"
+    train_img_url = "https://cdn-icons-png.flaticon.com/512/53/53730.png"
     st.markdown(
         f"""
         <div style='text-align: center; margin-top: 20px;'>
