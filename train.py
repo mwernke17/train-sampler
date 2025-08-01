@@ -7,7 +7,7 @@ POINTS_MAP = {
     11: 30, 12: 35, 13: 40, 14: 50, 15: 60, 16: 70, 17: 85, 18: 100, 19: 150, 20: 300
 }
 
-# Initialize state on first run
+# Initialize session state
 if 'original_pool' not in st.session_state:
     st.session_state.original_pool = [
         1,2,3,4,5,6,7,8,9,10,
@@ -22,41 +22,40 @@ if 'original_pool' not in st.session_state:
     st.session_state.locked_boxes = set()
     st.session_state.awaiting_input = False
     st.session_state.box_counter = 1
-    st.session_state.has_started = False
 
 st.title("🎲 Train Random Sampler")
 
-# Calculate runs of non-decreasing numbers
+# --- Run and Point Calculation ---
 def calculate_runs():
-    entered = []
+    entered_numbers = []
     for i in range(1, 21):
         val = st.session_state.get(f"box_{i}", "")
         try:
-            entered.append(int(val))
+            entered_numbers.append(int(val))
         except:
-            entered.append(None)
+            entered_numbers.append(None)
 
     runs = []
-    if entered:
-        run = 1
-        for i in range(1, len(entered)):
-            prev, curr = entered[i-1], entered[i]
+    if entered_numbers:
+        run_length = 1
+        for i in range(1, len(entered_numbers)):
+            prev = entered_numbers[i-1]
+            curr = entered_numbers[i]
             if prev is None or curr is None:
-                runs.append(run)
-                run = 1
+                runs.append(run_length)
+                run_length = 1
             elif curr >= prev:
-                run += 1
+                run_length += 1
             else:
-                runs.append(run)
-                run = 1
-        runs.append(run)
+                runs.append(run_length)
+                run_length = 1
+        runs.append(run_length)
     return runs
 
-# Total points from runs
 def calculate_points(runs):
     return sum(POINTS_MAP.get(r, 0) for r in runs)
 
-# Pull next number
+# --- Number Drawing Logic ---
 def get_next_number():
     if st.session_state.remaining_sample:
         st.session_state.current_number = st.session_state.remaining_sample.pop(0)
@@ -70,40 +69,56 @@ def get_next_number():
         st.session_state.current_number = None
         st.session_state.awaiting_input = False
 
-# Next number button
-next_disabled = st.session_state.awaiting_input or len(st.session_state.remaining_sample) == 0
-if st.button("Next Number", disabled=next_disabled):
-    get_next_number()
+# --- Top Controls ---
+col1, col2 = st.columns([1, 1])
+with col1:
+    if st.button("Next Number", disabled=st.session_state.awaiting_input or not st.session_state.remaining_sample):
+        get_next_number()
 
-# Reset button
-if st.button("Reset"):
-    st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
-    st.session_state.remaining_sample = st.session_state.sampled_values.copy()
-    st.session_state.output = []
-    st.session_state.current_number = None
-    st.session_state.locked_boxes = set()
-    st.session_state.awaiting_input = False
-    st.session_state.box_counter = 1
-    st.session_state.has_started = False
-    for i in range(1, 21):
-        st.session_state[f"box_{i}"] = ""
+with col2:
+    if st.button("Reset"):
+        st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
+        st.session_state.remaining_sample = st.session_state.sampled_values.copy()
+        st.session_state.output = []
+        st.session_state.current_number = None
+        st.session_state.locked_boxes = set()
+        st.session_state.awaiting_input = False
+        st.session_state.box_counter = 1
+        for i in range(1, 21):
+            st.session_state[f"box_{i}"] = ""
+        get_next_number()
 
-# Show output so far
+# --- Display Drawn Numbers ---
 st.write("### Numbers shown so far:")
 st.write(", ".join(str(num) for num in st.session_state.output))
 
+# --- Layout Definitions ---
 st.divider()
 st.subheader("Enter Your Numbers")
 
-# Grid layout positions for boxes
 input_positions = {
-    (4, 0): 1, (3, 0): 2, (2, 0): 3, (1, 0): 4, (0, 0): 5,
-    (0, 1): 6, (0, 2): 7, (0, 3): 8, (0, 4): 9, (0, 5): 10,
-    (0, 6): 11, (0, 7): 12, (0, 8): 13, (0, 9): 14, (0, 10): 15,
-    (0, 11): 16, (1, 11): 17, (2, 11): 18, (3, 11): 19, (4, 11): 20
+    (4, 0): 1,
+    (3, 0): 2,
+    (2, 0): 3,
+    (1, 0): 4,
+    (0, 0): 5,
+    (0, 1): 6,
+    (0, 2): 7,
+    (0, 3): 8,
+    (0, 4): 9,
+    (0, 5): 10,
+    (0, 6): 11,
+    (0, 7): 12,
+    (0, 8): 13,
+    (0, 9): 14,
+    (0, 10): 15,
+    (0, 11): 16,
+    (1, 11): 17,
+    (2, 11): 18,
+    (3, 11): 19,
+    (4, 11): 20,
 }
 
-# Callback maker
 def make_callback(box_num):
     def callback():
         key = f"box_{box_num}"
@@ -117,7 +132,6 @@ def make_callback(box_num):
                 get_next_number()
     return callback
 
-# Draw the grid
 for row in range(5):
     cols = st.columns(12)
     for col in range(12):
@@ -138,7 +152,7 @@ for row in range(5):
         else:
             cols[col].markdown(" ")
 
-# Styling for input boxes
+# --- Styling ---
 st.markdown("""
     <style>
         div[data-testid="stTextInput"] input {
@@ -160,18 +174,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Start with first number if nothing shown yet
-if (
-    st.session_state.current_number is None 
-    and st.session_state.remaining_sample 
-    and not st.session_state.awaiting_input 
-    and len(st.session_state.output) == 0
-    and not st.session_state.has_started
-):
-    st.session_state.has_started = True
-    get_next_number()
-
-# Show run progress
+# --- Live Run/Point Display ---
 runs = calculate_runs()
 points = calculate_points(runs)
 st.write("### Current runs of non-decreasing numbers:")
