@@ -62,11 +62,22 @@ with right_col:
 # CSS for uniform input box size and style
 st.markdown("""
     <style>
+        /* Targets all text input fields */
         div[data-testid="stTextInput"] input {
             width: 100px !important;
+            min-width: 100px !important;
+            max-width: 100px !important;
             height: 50px !important;
             font-size: 20px !important;
             text-align: center !important;
+            padding: 0 8px !important; /* optional: adjust horizontal padding */
+        }
+
+        /* Fix for container divs around the inputs to avoid shrinking */
+        div[data-testid="stTextInput"] {
+            min-width: 100px !important;
+            max-width: 100px !important;
         }
     </style>
 """, unsafe_allow_html=True)
+
