@@ -20,8 +20,10 @@ if 'original_pool' not in st.session_state:
 
 st.title("🎲 Train Random Sampler")
 
-# Next Number button logic
-if st.button("Next Number"):
+# Disable "Next Number" button if current_number is waiting to be entered
+next_disabled = st.session_state.current_number is not None
+
+if st.button("Next Number", disabled=next_disabled):
     if st.session_state.remaining_sample:
         next_number = st.session_state.remaining_sample.pop(0)
         st.session_state.output.append(next_number)
@@ -30,7 +32,6 @@ if st.button("Next Number"):
         st.warning("✅ All 20 numbers shown. Click 'Reset' to start again.")
         st.session_state.current_number = None
 
-# Reset button clears everything
 if st.button("Reset"):
     st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
     st.session_state.remaining_sample = st.session_state.sampled_values.copy()
@@ -70,12 +71,12 @@ input_positions = {
     (4, 11): 20,
 }
 
-# Before rendering: sync checked_box states with filled inputs
+# Sync checked state based on filled boxes
 for i in range(1, 21):
     if st.session_state.get(f"box_{i}", "") != "":
         st.session_state[f"checked_box_{i}"] = True
     else:
-        # Only reset checkbox if box is empty and no current_number assignment pending
+        # Reset checkbox if box empty and no current_number waiting
         if st.session_state.get(f"checked_box_{i}", False) and st.session_state.current_number is None:
             st.session_state[f"checked_box_{i}"] = False
 
@@ -85,37 +86,76 @@ for row in range(5):
         box_num = input_positions.get((row, col))
         if box_num:
             disabled = st.session_state.get(f"box_{box_num}", "") != ""
-
             cb_key = f"checked_box_{box_num}"
+            checked_val = st.session_state[cb_key]
 
-            checked = cols[col].checkbox(
-                label="",
-                value=st.session_state[cb_key],
-                key=cb_key,
-                disabled=disabled,
-                label_visibility="collapsed",
-            )
-
-            # React to user checking a box *only* if box not disabled and current_number available
+            # For left vertical column (col=0): checkbox to left, textbox to right
+            if col == 0 and row in range(5):
+                with cols[col]:
+                    left_col, right_col = st.columns([1,4])
+                    with left_col:
+                        checked = st.checkbox(
+                            label="",
+                            value=checked_val,
+                            key=cb_key,
+                            disabled=disabled,
+                            label_visibility="collapsed",
+                        )
+                    with right_col:
+                        st.text_input(
+                            "",
+                            key=f"box_{box_num}",
+                            disabled=disabled,
+                            label_visibility="collapsed",
+                            placeholder="",
+                        )
+            # For right vertical column (col=11): text box to left, checkbox to right
+            elif col == 11 and row in range(5):
+                with cols[col]:
+                    left_col, right_col = st.columns([4,1])
+                    with left_col:
+                        st.text_input(
+                            "",
+                            key=f"box_{box_num}",
+                            disabled=disabled,
+                            label_visibility="collapsed",
+                            placeholder="",
+                        )
+                    with right_col:
+                        checked = st.checkbox(
+                            label="",
+                            value=checked_val,
+                            key=cb_key,
+                            disabled=disabled,
+                            label_visibility="collapsed",
+                        )
+            # Elsewhere: checkbox above text input (center top row)
+            else:
+                with cols[col]:
+                    checked = st.checkbox(
+                        label="",
+                        value=checked_val,
+                        key=cb_key,
+                        disabled=disabled,
+                        label_visibility="collapsed",
+                    )
+                    st.text_input(
+                        "",
+                        key=f"box_{box_num}",
+                        disabled=disabled,
+                        label_visibility="collapsed",
+                        placeholder="",
+                    )
+            
+            # Handle checkbox clicked logic
             if checked and not disabled and st.session_state.current_number is not None:
                 st.session_state[f"box_{box_num}"] = str(st.session_state.current_number)
                 st.session_state.current_number = None
-                # st.session_state[cb_key] = True  # Already set by checkbox widget itself
-
-            cols[col].text_input(
-                "",
-                key=f"box_{box_num}",
-                disabled=disabled,
-                label_visibility="collapsed",
-                placeholder=""
-            )
+                st.session_state[cb_key] = True
         else:
             cols[col].markdown(" ")
 
-# CSS for uniform sizes: 
-#   - boxes container 75x75 px max/min,
-#   - text input inside 50x50 px max/min,
-#   - smaller checkboxes centered
+# CSS adjustments for spacing
 st.markdown("""
     <style>
         div[data-testid="stTextInput"] {
@@ -123,7 +163,7 @@ st.markdown("""
             min-width: 75px !important;
             max-height: 75px !important;
             min-height: 75px !important;
-            margin: 0 auto !important;
+            margin: 0 auto 10px auto !important;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -140,8 +180,7 @@ st.markdown("""
         input[type="checkbox"] {
             width: 15px !important;
             height: 15px !important;
-            margin-left: auto !important;
-            margin-right: auto !important;
+            margin: 0 auto !important;
             display: block !important;
         }
         div[role="checkbox"] {
@@ -150,9 +189,16 @@ st.markdown("""
             align-items: center;
             margin-bottom: 4px;
         }
-        button[kind="secondary"] {
-            font-size: 12px;
-            padding: 2px 0;
+        /* Add 20px gap between top row columns (cols 1 to 10 in row 0) */
+        /* Note: Streamlit columns don't have easy direct selectors; workaround with margin */
+        section[data-testid="stColumns"] > div:nth-child(1) > div > div > div:nth-child(1) {
+            margin-right: 20px !important;
+        }
+        /* Add margin-right to top row except last box (16th box col=11) */
+        /* We add margin-right to cols in row=0 and col=1 to 10 */
+        /* Unfortunately, no direct CSS selector for grid cells, so adding margin-right on all except last column */
+        section[data-testid="stColumns"] > div > div > div > div > div > div > div > div {
+            margin-right: 0px !important;
         }
     </style>
 """, unsafe_allow_html=True)
