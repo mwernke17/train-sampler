@@ -45,7 +45,7 @@ if st.session_state.output:
 
 # Make "Numbers shown so far:" 5 points bigger (about 23pt)
 st.markdown(
-    '<h3 style="font-size: 23pt;">Numbers shown so far:</h3>', 
+    '<h3 style="font-size: 50pt;">Numbers shown so far:</h3>', 
     unsafe_allow_html=True
 )
 st.write(", ".join(str(num) for num in st.session_state.output))
