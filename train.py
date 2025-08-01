@@ -1,9 +1,8 @@
 import streamlit as st
 import random
 
-st.set_page_config(page_title="Train Random Sampler", layout="wide")
+# --- Initialization ---
 
-# Initialize original pool and sampling
 if 'original_pool' not in st.session_state:
     st.session_state.original_pool = [
         1,2,3,4,5,6,7,8,9,10,
@@ -14,14 +13,16 @@ if 'original_pool' not in st.session_state:
     st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
     st.session_state.remaining_sample = st.session_state.sampled_values.copy()
     st.session_state.output = []
+    st.session_state.current_number = None
     for i in range(1, 21):
         st.session_state[f"box_{i}"] = ""
-        st.session_state[f"checked_box_{i}"] = False
-    st.session_state.current_number = None
+        st.session_state[f"chk_{i}"] = False
 
 st.title("🎲 Train Random Sampler")
 
-def draw_next_number():
+# --- Next Number Button ---
+next_button_disabled = st.session_state.current_number is not None
+if st.button("Next Number", disabled=next_button_disabled):
     if st.session_state.remaining_sample:
         next_num = st.session_state.remaining_sample.pop(0)
         st.session_state.output.append(next_num)
@@ -30,31 +31,24 @@ def draw_next_number():
         st.warning("✅ All 20 numbers shown. Click 'Reset' to start again.")
         st.session_state.current_number = None
 
-def reset_all():
+# --- Reset Button ---
+if st.button("Reset"):
     st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
     st.session_state.remaining_sample = st.session_state.sampled_values.copy()
     st.session_state.output = []
+    st.session_state.current_number = None
     for i in range(1, 21):
         st.session_state[f"box_{i}"] = ""
-        st.session_state[f"checked_box_{i}"] = False
-    st.session_state.current_number = None
+        st.session_state[f"chk_{i}"] = False
     st.success("🔄 Sampling reset!")
-
-if st.session_state.current_number is None:
-    if st.button("Next Number"):
-        draw_next_number()
-else:
-    st.write(f"Next number to place: **{st.session_state.current_number}**")
-    st.write("Please check a box next to a cell to assign this number before drawing next.")
-
-if st.button("Reset"):
-    reset_all()
 
 st.write("### Numbers shown so far:")
 st.write(", ".join(str(num) for num in st.session_state.output))
 
 st.divider()
 st.subheader("Enter Your Numbers")
+
+# --- Layout Setup ---
 
 input_positions = {
     (4, 0): 1,
@@ -79,54 +73,90 @@ input_positions = {
     (4, 11): 20,
 }
 
+# Render the grid row by row
 for row in range(5):
-    cols = st.columns(12, gap="large")
+    cols = st.columns(12, gap="medium")
     for col in range(12):
         box_num = input_positions.get((row, col))
         if box_num:
-            disabled = st.session_state.get(f"box_{box_num}", "") != ""
-            col1, col2 = st.columns([1,5]) if col == 0 else (cols[col], None)
-            col_right1, col_right2 = st.columns([5,1]) if col == 11 else (cols[col], None)
-            
-            # For left column (col 0), put checkbox to left of text box
+            # Is box filled?
+            disabled = st.session_state[f"box_{box_num}"] != ""
+
+            # Left column checkboxes (col 0)
             if col == 0:
-                with col1:
-                    checked = st.checkbox("", key=f"chk_{box_num}", disabled=disabled)
-                with col2:
-                    val = st.text_input("", key=f"box_{box_num}", disabled=disabled, label_visibility="collapsed")
-            # For right column (col 11), put checkbox to right of text box
+                with cols[col]:
+                    checked = st.checkbox(
+                        label="",
+                        key=f"chk_{box_num}",
+                        disabled=disabled or (st.session_state.current_number is None),
+                        value=st.session_state[f"chk_{box_num}"],
+                        label_visibility="collapsed",
+                        help=f"Check to assign current number to box {box_num}",
+                    )
+                with cols[col+1]:
+                    st.text_input(
+                        label="",
+                        key=f"box_{box_num}",
+                        value=st.session_state[f"box_{box_num}"],
+                        disabled=True,
+                        label_visibility="collapsed",
+                    )
+                # If checkbox just checked, assign number
+                if checked and not disabled and st.session_state.current_number is not None:
+                    st.session_state[f"box_{box_num}"] = str(st.session_state.current_number)
+                    st.session_state.current_number = None
+                    st.session_state[f"chk_{box_num}"] = False
+
+            # Right column checkboxes (col 11)
             elif col == 11:
-                with col_right1:
-                    val = st.text_input("", key=f"box_{box_num}", disabled=disabled, label_visibility="collapsed")
-                with col_right2:
-                    checked = st.checkbox("", key=f"chk_{box_num}", disabled=disabled)
+                with cols[col-1]:
+                    st.text_input(
+                        label="",
+                        key=f"box_{box_num}",
+                        value=st.session_state[f"box_{box_num}"],
+                        disabled=True,
+                        label_visibility="collapsed",
+                    )
+                with cols[col]:
+                    checked = st.checkbox(
+                        label="",
+                        key=f"chk_{box_num}",
+                        disabled=disabled or (st.session_state.current_number is None),
+                        value=st.session_state[f"chk_{box_num}"],
+                        label_visibility="collapsed",
+                        help=f"Check to assign current number to box {box_num}",
+                    )
+                if checked and not disabled and st.session_state.current_number is not None:
+                    st.session_state[f"box_{box_num}"] = str(st.session_state.current_number)
+                    st.session_state.current_number = None
+                    st.session_state[f"chk_{box_num}"] = False
+
+            # Top row text inputs only (cols 1 to 10)
             else:
-                # For other boxes (top row), just show text input
-                val = cols[col].text_input("", key=f"box_{box_num}", disabled=disabled, label_visibility="collapsed")
-            
-            # If checkbox checked and box empty and there's a current number:
-            if (col == 0 or col == 11) and checked and not disabled and st.session_state.current_number is not None:
-                st.session_state[f"box_{box_num}"] = str(st.session_state.current_number)
-                st.session_state.current_number = None
-                # Also uncheck checkbox to avoid repeat (optional)
-                st.session_state[f"chk_{box_num}"] = False
-
+                with cols[col]:
+                    st.text_input(
+                        label="",
+                        key=f"box_{box_num}",
+                        value=st.session_state[f"box_{box_num}"],
+                        disabled=True,
+                        label_visibility="collapsed",
+                    )
         else:
-            cols[col].markdown(" ")
+            cols[col].markdown(" ")  # empty cell
 
-
-st.markdown("""
+# --- CSS Styling ---
+st.markdown(
+    """
     <style>
-        div[data-testid="stTextInput"] {
+        /* Container size */
+        .stTextInput > div {
             max-width: 75px !important;
             min-width: 75px !important;
             max-height: 75px !important;
             min-height: 75px !important;
-            margin: 0 auto 10px auto !important;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            margin: 0 auto !important;
         }
+        /* Input box size */
         div[data-testid="stTextInput"] input {
             width: 50px !important;
             height: 50px !important;
@@ -136,18 +166,13 @@ st.markdown("""
             margin: 0 auto !important;
             box-sizing: border-box !important;
         }
+        /* Checkbox size */
         input[type="checkbox"] {
-            width: 15px !important;
-            height: 15px !important;
-            margin: 0 auto 5px auto !important;
-            display: block !important;
-            cursor: pointer;
-        }
-        div[role="checkbox"] {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 4px;
+            width: 20px !important;
+            height: 20px !important;
+            margin-top: 15px !important;
         }
     </style>
-""", unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True,
+)
