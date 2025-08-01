@@ -1,6 +1,12 @@
 import streamlit as st
 import random
 
+# Points mapping for runs (run length -> points)
+POINTS_MAP = {
+    1: 0, 2: 1, 3: 3, 4: 5, 5: 7, 6: 9, 7: 11, 8: 15, 9: 20, 10: 25,
+    11: 30, 12: 35, 13: 40, 14: 50, 15: 60, 16: 70, 17: 85, 18: 100, 19: 150, 20: 300
+}
+
 # Initialize numbers and state on first run
 if 'original_pool' not in st.session_state:
     st.session_state.original_pool = [
@@ -20,6 +26,40 @@ if 'original_pool' not in st.session_state:
 
 st.title("🎲 Train Random Sampler")
 
+# Function to calculate runs from entered boxes
+def calculate_runs():
+    entered_numbers = []
+    for i in range(1, 21):
+        val = st.session_state.get(f"box_{i}", "")
+        try:
+            entered_numbers.append(int(val))
+        except:
+            entered_numbers.append(None)
+
+    runs = []
+    if entered_numbers:
+        run_length = 1
+        for i in range(1, len(entered_numbers)):
+            prev = entered_numbers[i-1]
+            curr = entered_numbers[i]
+            if prev is None or curr is None:
+                runs.append(run_length)
+                run_length = 1
+            elif curr >= prev:
+                run_length += 1
+            else:
+                runs.append(run_length)
+                run_length = 1
+        runs.append(run_length)
+    return runs
+
+# Function to calculate total points from runs
+def calculate_points(runs):
+    total = 0
+    for r in runs:
+        total += POINTS_MAP.get(r, 0)
+    return total
+
 # Function to get next number
 def get_next_number():
     if st.session_state.remaining_sample:
@@ -27,10 +67,11 @@ def get_next_number():
         st.session_state.output.append(st.session_state.current_number)
         st.session_state.awaiting_input = True
     else:
-        # Calculate runs for final message
+        # Calculate runs and points for final message
         runs = calculate_runs()
+        points = calculate_points(runs)
         runs_str = ", ".join(str(r) for r in runs)
-        st.warning(f"✅ All 20 numbers shown. Runs: {runs_str}. Click 'Reset' to start again.")
+        st.warning(f"✅ All 20 numbers shown. Runs: {runs_str}. Points: {points}. Click 'Reset' to start again.")
         st.session_state.current_number = None
         st.session_state.awaiting_input = False
 
@@ -80,32 +121,6 @@ input_positions = {
     (3, 11): 19,
     (4, 11): 20,
 }
-
-def calculate_runs():
-    entered_numbers = []
-    for i in range(1, 21):
-        val = st.session_state.get(f"box_{i}", "")
-        try:
-            entered_numbers.append(int(val))
-        except:
-            entered_numbers.append(None)
-
-    runs = []
-    if entered_numbers:
-        run_length = 1
-        for i in range(1, len(entered_numbers)):
-            prev = entered_numbers[i-1]
-            curr = entered_numbers[i]
-            if prev is None or curr is None:
-                runs.append(run_length)
-                run_length = 1
-            elif curr >= prev:
-                run_length += 1
-            else:
-                runs.append(run_length)
-                run_length = 1
-        runs.append(run_length)
-    return runs
 
 def make_callback(box_num):
     def callback():
@@ -173,7 +188,9 @@ if (
     st.session_state.has_started = True
     get_next_number()
 
-# --- Calculate and display runs below inputs ---
+# --- Calculate and display runs and points below inputs during play ---
 runs = calculate_runs()
-st.write("### Runs of non-decreasing numbers:")
+points = calculate_points(runs)
+st.write("### Current runs of non-decreasing numbers:")
 st.write(runs)
+st.write(f"### Current points: {points}")
