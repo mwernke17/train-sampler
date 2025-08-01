@@ -86,6 +86,8 @@ st.markdown("""
         div[data-testid="stTextInput"] {
             max-width: 50px !important;
             min-width: 50px !important;
+             max-height: 50px !important;
+            min-height: 50px !important;
             margin: 0 auto !important;
         }
     </style>
