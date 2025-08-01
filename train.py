@@ -45,12 +45,12 @@ if st.session_state.output:
 
 
 st.markdown(
-    '<h3 style="font-size: 36pt;">Numbers shown so far:</h3>', 
+    '<h3 style="font-size: 30pt;">Numbers shown so far:</h3>', 
     unsafe_allow_html=True
 )
 
 numbers_str = ", ".join(str(num) for num in st.session_state.output)
 st.markdown(
-    f'<div style="font-size:30pt;">{numbers_str}</div>',
+    f'<div style="font-size:24pt;">{numbers_str}</div>',
     unsafe_allow_html=True
 )
