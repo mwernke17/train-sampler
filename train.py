@@ -1,8 +1,8 @@
 import streamlit as st
 import random
 
-# Initialize on first run
-if 'initialized' not in st.session_state:
+# Initialize numbers and state on first run
+if 'original_pool' not in st.session_state:
     st.session_state.original_pool = [
         1,2,3,4,5,6,7,8,9,10,
         11,11,12,12,13,13,14,14,15,15,
@@ -15,32 +15,26 @@ if 'initialized' not in st.session_state:
     st.session_state.current_number = None
     st.session_state.locked_boxes = set()
     st.session_state.awaiting_input = False
-    st.session_state.next_button_pressed = False
-    st.session_state.initialized = True
+    st.session_state.box_counter = 1
+    st.session_state.has_started = False
 
 st.title("🎲 Train Random Sampler")
 
+# Function to get next number
 def get_next_number():
     if st.session_state.remaining_sample:
         st.session_state.current_number = st.session_state.remaining_sample.pop(0)
         st.session_state.output.append(st.session_state.current_number)
         st.session_state.awaiting_input = True
-        st.session_state.next_button_pressed = True  # mark that next number was just fetched
     else:
         st.warning("✅ All 20 numbers shown. Click 'Reset' to start again.")
         st.session_state.current_number = None
         st.session_state.awaiting_input = False
-        st.session_state.next_button_pressed = False
 
-# Control Next Number button:
-# Disable if waiting for input or no numbers remain
+# Only show Next button if not waiting for input and numbers remain
 next_disabled = st.session_state.awaiting_input or len(st.session_state.remaining_sample) == 0
-
-# Button press with debouncing logic
 if st.button("Next Number", disabled=next_disabled):
-    # Only allow if not already pressed and waiting for input is False
-    if not st.session_state.next_button_pressed and not st.session_state.awaiting_input:
-        get_next_number()
+    get_next_number()
 
 if st.button("Reset"):
     st.session_state.sampled_values = random.sample(st.session_state.original_pool, 20)
@@ -49,9 +43,11 @@ if st.button("Reset"):
     st.session_state.current_number = None
     st.session_state.locked_boxes = set()
     st.session_state.awaiting_input = False
-    st.session_state.next_button_pressed = False
+    st.session_state.box_counter = 1
+    st.session_state.has_started = False
     for i in range(1, 21):
         st.session_state[f"box_{i}"] = ""
+    st.experimental_rerun()
 
 st.write("### Numbers shown so far:")
 st.write(", ".join(str(num) for num in st.session_state.output))
@@ -91,7 +87,8 @@ def make_callback(box_num):
                 st.session_state.locked_boxes.add(box_num)
                 st.session_state.awaiting_input = False
                 st.session_state.current_number = None
-                st.session_state.next_button_pressed = False  # reset the flag so next number can be generated
+                st.session_state.box_counter += 1
+                get_next_number()
     return callback
 
 for row in range(5):
@@ -102,6 +99,7 @@ for row in range(5):
             key = f"box_{box_num}"
             value = st.session_state.get(key, "")
             disabled = box_num in st.session_state.locked_boxes
+
             cols[col].text_input(
                 label="",
                 key=key,
@@ -134,3 +132,42 @@ st.markdown("""
         }
     </style>
 """, unsafe_allow_html=True)
+
+# Auto-start with first number only once
+if (
+    st.session_state.current_number is None 
+    and st.session_state.remaining_sample 
+    and not st.session_state.awaiting_input 
+    and len(st.session_state.output) == 0
+    and not st.session_state.has_started
+):
+    st.session_state.has_started = True
+    get_next_number()
+
+# --- Calculate runs of non-decreasing sequences ---
+entered_numbers = []
+for i in range(1, 21):
+    val = st.session_state.get(f"box_{i}", "")
+    try:
+        entered_numbers.append(int(val))
+    except:
+        entered_numbers.append(None)
+
+runs = []
+if entered_numbers:
+    run_length = 1
+    for i in range(1, len(entered_numbers)):
+        prev = entered_numbers[i-1]
+        curr = entered_numbers[i]
+        if prev is None or curr is None:
+            runs.append(run_length)
+            run_length = 1
+        elif curr >= prev:
+            run_length += 1
+        else:
+            runs.append(run_length)
+            run_length = 1
+    runs.append(run_length)
+
+st.write("### Runs of non-decreasing numbers:")
+st.write(runs)
